@@ -33,49 +33,8 @@ const SimpleMarkdown = ({ text }: { text: string }) => {
 export default function GamePlayer({ game, onClose }: GamePlayerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const iframeContainerRef = useRef<HTMLDivElement>(null);
-  const [markdown, setMarkdown] = useState('Now Loading...');
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchMarkdown() {
-      setIsLoading(true);
-      try {
-        // In a real app, you would fetch this from a URL or a backend service.
-        // We simulate a fetch here.
-        const mockMarkdown = `
-# How to Play ${game.title}
-
-Welcome to the game! Here are the basic controls and objectives.
-
-## Controls
-- **Arrow Keys**: Move your character
-- **Spacebar**: Jump
-- **Mouse**: Look around
-
-## Story
-${game.description} Embark on an epic journey to save the festival!
-
----
-
-*Good luck, have fun!*
-    `;
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 500)); 
-        setMarkdown(mockMarkdown);
-      } catch (error) {
-        setMarkdown('Failed to load game description.');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    if (game.markdownPath) {
-      fetchMarkdown();
-    } else {
-        setMarkdown('No description available for this game.');
-        setIsLoading(false);
-    }
-  }, [game]);
+  
+  const gameUrl = `/games/${game.id}/index.html`;
 
   const toggleFullscreen = () => {
     if (!iframeContainerRef.current) return;
@@ -110,7 +69,7 @@ ${game.description} Embark on an epic journey to save the festival!
       
       <div ref={iframeContainerRef} className="relative w-full aspect-video bg-black rounded-lg shadow-2xl mb-8">
         <iframe
-          src={game.gameUrl}
+          src={gameUrl}
           title={game.title}
           className="w-full h-full border-0 rounded-lg"
           allow="fullscreen"
@@ -137,7 +96,7 @@ ${game.description} Embark on an epic journey to save the festival!
           </CardHeader>
           <CardContent>
             <div className="p-4 rounded-md bg-background min-h-[150px]">
-               {isLoading ? <p>Now Loading...</p> : <SimpleMarkdown text={markdown} />}
+               <SimpleMarkdown text={game.markdownText} />
             </div>
           </CardContent>
         </Card>

@@ -23,9 +23,10 @@ interface EditGameDialogProps {
 const formSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
+  markdownText: z.string().min(20, "Markdown must be at least 20 characters."),
+  // File inputs are now for re-upload and are optional
   zipFile: z.instanceof(File).optional(),
   thumbnail: z.instanceof(File).optional(),
-  markdownFile: z.instanceof(File).optional(),
 });
 
 export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }: EditGameDialogProps) {
@@ -35,6 +36,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
     defaultValues: {
       title: game.title,
       description: game.description,
+      markdownText: game.markdownText,
     },
   });
   
@@ -43,21 +45,32 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
       form.reset({
         title: game.title,
         description: game.description,
+        markdownText: game.markdownText
       });
     }
   }, [game, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const formData = new FormData();
-    formData.append('gameId', game.id);
-    formData.append('title', values.title);
-    formData.append('description', values.description);
-    if (values.zipFile) formData.append('zipFile', values.zipFile);
-    if (values.thumbnail) formData.append('thumbnail', values.thumbnail);
-    if (values.markdownFile) formData.append('markdownFile', values.markdownFile);
+    // Note: In a real app, if files are selected, you'd send them
+    // to your Python server here.
+    const reuploadData = new FormData();
+    if (values.zipFile) reuploadData.append('zipFile', values.zipFile);
+    if (values.thumbnail) reuploadData.append('thumbnail', values.thumbnail);
+
+    if (reuploadData.has('zipFile') || reuploadData.has('thumbnail')) {
+        console.log("Re-uploading files for game:", game.id);
+        // await fetch(`/api/reupload/${game.id}`, { method: 'POST', body: reuploadData });
+        toast({ title: "File Re-upload Simulated", description: "In a real app, files would be re-uploaded to the Python server."})
+    }
 
     try {
-        const updatedGame = await updateGame(formData);
+        await updateGame(game.id, values.title, values.description, values.markdownText);
+        const updatedGame: Game = {
+            ...game,
+            title: values.title,
+            description: values.description,
+            markdownText: values.markdownText,
+        };
         onGameUpdate(updatedGame);
         toast({
             title: "Game Updated!",
@@ -67,7 +80,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
     } catch (error) {
          toast({
             title: "Update Failed",
-            description: "Could not update the game. Please try again.",
+            description: "Could not update game details in Firestore.",
             variant: "destructive",
         });
     }
@@ -83,7 +96,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
             <FormField
               control={form.control}
               name="title"
@@ -106,7 +119,21 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="markdownText"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Game Details (Markdown)</FormLabel>
+                  <FormControl><Textarea rows={10} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <p className="text-sm font-medium pt-4">Re-upload Files (Optional)</p>
+            <FormDescription>These files will be sent to the Python server to overwrite existing ones.</FormDescription>
+            
              <FormField
                 control={form.control}
                 name="zipFile"
@@ -124,24 +151,14 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
                 name="thumbnail"
                 render={({ field: { onChange, ...fieldProps }}) => (
                     <FormItem>
-                        <FormLabel>Thumbnail Image</FormLabel>
+                        <FormLabel>Thumbnail Image (img.png)</FormLabel>
                         <FormControl><Input type="file" accept="image/png, image/jpeg" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl>
+                         <FormDescription>Upload a new image to replace the current thumbnail.</FormDescription>
                         <FormMessage />
                     </FormItem>
                 )}
             />
-             <FormField
-                control={form.control}
-                name="markdownFile"
-                render={({ field: { onChange, ...fieldProps }}) => (
-                    <FormItem>
-                        <FormLabel>Game Details File</FormLabel>
-                        <FormControl><Input type="file" accept=".md, .txt" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <DialogFooter>
+            <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "Saving..." : "Save Changes"}

@@ -28,9 +28,11 @@ const formSchema = z.object({
   description: z.string().min(10, {
     message: 'Description must be at least 10 characters.',
   }),
+  markdownText: z.string().min(20, {
+    message: 'Markdown text must be at least 20 characters.'
+  }),
   zipFile: z.instanceof(File).refine(file => file.size > 0, 'A .zip file is required.'),
-  thumbnail: z.instanceof(File).optional(),
-  markdownFile: z.instanceof(File).optional(),
+  thumbnail: z.instanceof(File).refine(file => file.size > 0, 'A thumbnail image is required.'),
 });
 
 export default function AddGameForm() {
@@ -41,6 +43,7 @@ export default function AddGameForm() {
         defaultValues: {
             title: '',
             description: '',
+            markdownText: ''
         },
     });
 
@@ -50,13 +53,9 @@ export default function AddGameForm() {
         const formData = new FormData();
         formData.append('title', values.title);
         formData.append('description', values.description);
+        formData.append('markdownText', values.markdownText);
         formData.append('zipFile', values.zipFile);
-        if (values.thumbnail) {
-            formData.append('thumbnail', values.thumbnail);
-        }
-        if (values.markdownFile) {
-            formData.append('markdownFile', values.markdownFile);
-        }
+        formData.append('thumbnail', values.thumbnail);
         
         try {
             await addGame(formData);
@@ -68,7 +67,7 @@ export default function AddGameForm() {
         } catch (error) {
              toast({
                 title: "Upload Failed",
-                description: "Could not add the game. Please try again.",
+                description: error instanceof Error ? error.message : "Could not add the game. Please try again.",
                 variant: "destructive",
             });
         }
@@ -99,8 +98,24 @@ export default function AddGameForm() {
                                 <FormItem>
                                     <FormLabel>Short Description</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="A short, catchy description for the game card." {...field} />
+                                        <Textarea rows={2} placeholder="A short, catchy description for the game card." {...field} />
                                     </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="markdownText"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Game Details (Markdown)</FormLabel>
+                                    <FormControl>
+                                        <Textarea rows={8} placeholder="Use Markdown for instructions, story, credits, etc." {...field} />
+                                    </FormControl>
+                                     <FormDescription>
+                                        You can use Markdown syntax like # Title, ## Subtitle, and --- for dividers.
+                                    </FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -110,7 +125,7 @@ export default function AddGameForm() {
                             name="zipFile"
                             render={({ field: { onChange, ...fieldProps }}) => (
                                 <FormItem>
-                                    <FormLabel>Game ZIP File (Required)</FormLabel>
+                                    <FormLabel>Game ZIP File</FormLabel>
                                     <FormControl>
                                         <Input type="file" accept=".zip" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} />
                                     </FormControl>
@@ -128,21 +143,7 @@ export default function AddGameForm() {
                                     <FormControl>
                                         <Input type="file" accept="image/png, image/jpeg" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} />
                                     </FormControl>
-                                    <FormDescription>A cool image for the game card (PNG or JPG).</FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="markdownFile"
-                            render={({ field: { onChange, ...fieldProps }}) => (
-                                <FormItem>
-                                    <FormLabel>Game Details File</FormLabel>
-                                    <FormControl>
-                                        <Input type="file" accept=".md, .txt" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} />
-                                    </FormControl>
-                                    <FormDescription>A Markdown (.md) or text file with instructions, story, etc.</FormDescription>
+                                    <FormDescription>A cool image for the game card (PNG or JPG). This will be saved as `img.png`</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}

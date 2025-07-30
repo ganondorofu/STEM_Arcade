@@ -33,6 +33,8 @@ import ViewFeedbackDialog from './view-feedback-dialog';
 import { Card, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { deleteGame } from '@/app/admin/actions';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+
 
 interface GamesTableProps {
   initialGames: Game[];
@@ -41,7 +43,7 @@ interface GamesTableProps {
 
 export default function GamesTable({ initialGames, initialFeedbacks }: GamesTableProps) {
   const [games, setGames] = useState<Game[]>(initialGames);
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>(initialFeedbacks);
+  const [feedbacks] = useState<Feedback[]>(initialFeedbacks);
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
@@ -89,6 +91,11 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
   const handleUpdateGame = (updatedGame: Game) => {
       setGames(games.map(g => g.id === updatedGame.id ? updatedGame : g));
   }
+  
+  const formatDate = (date: any) => {
+    if (!date || !date.seconds) return 'N/A';
+    return format(new Date(date.seconds * 1000), 'yyyy-MM-dd');
+  }
 
 
   return (
@@ -114,7 +121,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
               <TableRow key={game.id}>
                 <TableCell className="font-medium">{game.title}</TableCell>
                 <TableCell className="hidden md:table-cell max-w-sm truncate">{game.description}</TableCell>
-                <TableCell className="hidden lg:table-cell">{new Date(game.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell className="hidden lg:table-cell">{formatDate(game.createdAt)}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -140,6 +147,13 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
                 </TableCell>
               </TableRow>
             ))}
+             {games.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                        No games found.
+                    </TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </Card>
@@ -164,7 +178,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete the
-                        game "{selectedGame.title}" and all of its associated data.
+                        game "{selectedGame.title}" and all of its associated data from Firestore. File assets on the server will need to be removed manually.
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

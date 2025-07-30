@@ -9,17 +9,23 @@ interface GameCardProps {
 }
 
 export default function GameCard({ game, onPlay }: GameCardProps) {
+  const thumbnailPath = `/games/${game.id}/img.png`;
+
   return (
     <Card className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
       <CardHeader className="p-0">
         <div className="aspect-video relative">
           <Image
-            src={game.thumbnailPath}
+            src={thumbnailPath}
             alt={game.title}
             fill
             className="object-cover"
             data-ai-hint="gameplay screenshot"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            onError={(e) => {
+              // If the image fails to load, use a placeholder
+              e.currentTarget.src = 'https://placehold.co/600x400/f8bbd0/333333';
+            }}
           />
         </div>
       </CardHeader>

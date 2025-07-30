@@ -19,7 +19,7 @@ export default function Header() {
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Gamepad2 className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg sm:inline-block">STEM Arcade</span>
+          <span className="font-bold text-lg sm:inline-block">BunkaSai Arcade</span>
         </Link>
         <div className="flex-1" />
         <nav className="flex items-center space-x-1 sm:space-x-2">

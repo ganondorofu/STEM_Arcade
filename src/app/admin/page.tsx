@@ -1,10 +1,25 @@
 import GamesTable from "@/components/admin/games-table";
-import { games, feedbacks } from "@/lib/data";
+import { feedbacks } from "@/lib/data";
+import { Game } from "@/lib/types";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 
-export default function AdminPage() {
-  // In a real app, you'd fetch this from Firestore.
-  // This is a server component, so you could do that directly here.
-  const allGames = games;
+async function getGames(): Promise<Game[]> {
+    try {
+        const gamesCollection = collection(db, 'games');
+        const q = query(gamesCollection, orderBy('createdAt', 'desc'));
+        const gameSnapshot = await getDocs(q);
+        const gamesList = gameSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Game));
+        return gamesList;
+    } catch (error) {
+        console.error("Failed to fetch games for admin page:", error);
+        return [];
+    }
+}
+
+
+export default async function AdminPage() {
+  const allGames = await getGames();
   const allFeedbacks = feedbacks;
 
   return (

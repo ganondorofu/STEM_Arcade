@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/games/:path*',
+        destination: 'http://localhost:8000/games/:path*', // Assuming Python server runs on port 8000
+      },
+    ]
+  },
 };
 
 export default nextConfig;

@@ -2,10 +2,11 @@ export interface Game {
   id: string;
   title: string;
   description: string;
-  thumbnailPath: string;
-  markdownPath: string;
-  gameUrl: string;
-  createdAt: Date;
+  markdownText: string;
+  createdAt?: {
+    seconds: number;
+    nanoseconds: number;
+  };
 }
 
 export interface Feedback {
