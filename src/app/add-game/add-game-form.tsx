@@ -44,6 +44,8 @@ export default function AddGameForm() {
         },
     });
 
+    const {formState: { isSubmitting }, setError} = form;
+
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         const formData = new FormData();
         formData.append('title', values.title);
@@ -145,9 +147,9 @@ export default function AddGameForm() {
                                 </FormItem>
                             )}
                         />
-                        <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
+                        <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                             <UploadCloud className="mr-2 h-5 w-5" />
-                            {form.formState.isSubmitting ? 'Uploading...' : 'Add Game to Arcade'}
+                            {isSubmitting ? 'Uploading...' : 'Add Game to Arcade'}
                         </Button>
                     </form>
                 </Form>
