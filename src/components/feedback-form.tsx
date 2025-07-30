@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
-import { Send, MessageSquareHeart } from 'lucide-react';
+import { Send, MessageSquareHeart, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast"
+import { submitFeedback } from '@/app/actions';
 
 interface FeedbackFormProps {
   gameId: string;
@@ -14,9 +15,18 @@ interface FeedbackFormProps {
 export default function FeedbackForm({ gameId }: FeedbackFormProps) {
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [backendUrl, setBackendUrl] = useState('');
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useState(() => {
+    const url = localStorage.getItem('backendUrl');
+    if (url) {
+        setBackendUrl(url);
+    }
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (comment.trim() === '') {
         toast({
@@ -26,16 +36,33 @@ export default function FeedbackForm({ gameId }: FeedbackFormProps) {
         })
         return;
     };
+    if (!backendUrl) {
+        toast({
+            title: "バックエンドURL未設定",
+            description: "フィードバックを送信できません。管理者に連絡してください。",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    setIsSubmitting(true);
     
-    console.log('Feedback submitted for game', gameId, ':', comment);
-    // In a real app, this would call a server action to save to Firestore.
-    // e.g., await submitFeedback({ gameId, comment });
-    
-    setSubmitted(true);
-    toast({
-        title: "ありがとうございます！",
-        description: "フィードバックが送信されました。",
-    });
+    try {
+        await submitFeedback({ gameId, comment, backendUrl });
+        setSubmitted(true);
+        toast({
+            title: "ありがとうございます！",
+            description: "フィードバックが送信されました。",
+        });
+    } catch (error) {
+        toast({
+            title: "送信失敗",
+            description: error instanceof Error ? error.message : "フィードバックの送信に失敗しました。",
+            variant: "destructive",
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -65,10 +92,15 @@ export default function FeedbackForm({ gameId }: FeedbackFormProps) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={4}
+            disabled={isSubmitting}
           />
-          <Button type="submit" className="w-full" variant="secondary">
-            <Send className="mr-2 h-4 w-4" />
-            フィードバックを送信
+          <Button type="submit" className="w-full" variant="secondary" disabled={isSubmitting}>
+            {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+                <Send className="mr-2 h-4 w-4" />
+            )}
+            {isSubmitting ? '送信中...' : 'フィードバックを送信'}
           </Button>
         </form>
       </CardContent>

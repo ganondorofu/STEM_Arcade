@@ -23,8 +23,8 @@ interface EditGameDialogProps {
 
 const formSchema = z.object({
   title: z.string().min(2, 'タイトルは2文字以上で入力してください。'),
-  description: z.string().min(10, '説明は10文字以上で入力してください。'),
-  markdownText: z.string().min(20, "Markdownは20文字以上で入力してください。"),
+  description: z.string().optional(),
+  markdownText: z.string().optional(),
   zipFile: z.instanceof(File).optional(),
   thumbnail: z.instanceof(File).optional(),
 });
@@ -36,8 +36,8 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: game.title,
-      description: game.description,
-      markdownText: game.markdownText,
+      description: game.description || '',
+      markdownText: game.markdownText || '',
     },
   });
   
@@ -45,8 +45,8 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
     if (game) {
       form.reset({
         title: game.title,
-        description: game.description,
-        markdownText: game.markdownText
+        description: game.description || '',
+        markdownText: game.markdownText || ''
       });
     }
   }, [game, form]);
@@ -75,6 +75,11 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
         // Optionally clear the file inputs
         form.setValue('zipFile', undefined);
         form.setValue('thumbnail', undefined);
+        const fileInput1 = document.querySelector('input[name="zipFile"]') as HTMLInputElement | null;
+        if (fileInput1) fileInput1.value = '';
+        const fileInput2 = document.querySelector('input[name="thumbnail"]') as HTMLInputElement | null;
+        if(fileInput2) fileInput2.value = '';
+        
     } catch (error) {
         toast({ title: "再アップロード失敗", description: error instanceof Error ? error.message : "サーバーエラー", variant: "destructive" });
     } finally {
@@ -84,12 +89,12 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-        await updateGame(game.id, values.title, values.description, values.markdownText);
+        await updateGame(game.id, values.title, values.description || "", values.markdownText || "");
         const updatedGame: Game = {
             ...game,
             title: values.title,
-            description: values.description,
-            markdownText: values.markdownText,
+            description: values.description || '',
+            markdownText: values.markdownText || '',
         };
         onGameUpdate(updatedGame);
         toast({
@@ -137,8 +142,8 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <p className="text-sm font-medium">ファイルの再アップロード（任意）</p>
               <FormDescription>現在のゲームビルドやサムネイルを置き換える場合に利用します。</FormDescription>
               
-              <FormField control={form.control} name="zipFile" render={({ field: { onChange, ...fieldProps }}) => ( <FormItem> <FormLabel>ゲームZIPファイル</FormLabel> <FormControl><Input type="file" accept=".zip" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
-              <FormField control={form.control} name="thumbnail" render={({ field: { onChange, ...fieldProps }}) => ( <FormItem> <FormLabel>サムネイル画像</FormLabel> <FormControl><Input type="file" accept="image/png, image/jpeg" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
+              <FormField control={form.control} name="zipFile" render={({ field: { onChange, value, ...fieldProps }}) => ( <FormItem> <FormLabel>ゲームZIPファイル</FormLabel> <FormControl><Input type="file" accept=".zip" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
+              <FormField control={form.control} name="thumbnail" render={({ field: { onChange, value, ...fieldProps }}) => ( <FormItem> <FormLabel>サムネイル画像</FormLabel> <FormControl><Input type="file" accept="image/png, image/jpeg" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
               
               <DialogFooter>
                   <Button onClick={handleReupload} disabled={!hasFilesForReupload || isReuploading}>

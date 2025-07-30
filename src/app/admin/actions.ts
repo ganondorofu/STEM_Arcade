@@ -6,7 +6,7 @@ import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { revalidatePath } from "next/cache";
 
 export async function updateGame(gameId: string, title: string, description: string, markdownText: string): Promise<void> {
-  if (!gameId || !title || !description || !markdownText) {
+  if (!gameId || !title) {
     throw new Error("Missing required fields for update");
   }
 
@@ -30,8 +30,15 @@ export async function deleteGame(gameId: string, backendUrl: string) {
     throw new Error('Backend URL is not configured.');
   }
 
+  const formData = new FormData();
+  formData.append('id', gameId);
+
   // Also delete files from the Python server
-  const response = await fetch(`${backendUrl}/delete/${gameId}`, { method: 'DELETE' });
+  const response = await fetch(`${backendUrl}/delete`, { 
+    method: 'POST',
+    body: formData,
+  });
+
   if (!response.ok) {
      const errorBody = await response.text();
      console.error("File deletion failed:", errorBody);
@@ -52,8 +59,16 @@ export async function reuploadFiles(formData: FormData) {
     if (!gameId || !backendUrl) {
         throw new Error("Game ID or Backend URL is missing.");
     }
+    
+    // The Python server expects the id in the form data, not as a path parameter.
+    formData.append('id', gameId as string);
 
-    const response = await fetch(`${backendUrl}/reupload/${gameId}`, {
+    // We don't need to send the backendUrl in the body
+    formData.delete('backendUrl');
+    formData.delete('gameId');
+
+
+    const response = await fetch(`${backendUrl}/reupload`, {
         method: 'POST',
         body: formData,
     });
