@@ -33,12 +33,16 @@ const SimpleMarkdown = ({ text }: { text: string }) => {
 export default function GamePlayer({ game, onClose }: GamePlayerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const iframeContainerRef = useRef<HTMLDivElement>(null);
-  const [markdown, setMarkdown] = useState('');
+  const [markdown, setMarkdown] = useState('Now Loading...');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you would fetch this from the URL game.markdownPath
-    // For this demo, we'll use a placeholder.
-    const mockMarkdown = `
+    async function fetchMarkdown() {
+      setIsLoading(true);
+      try {
+        // In a real app, you would fetch this from a URL or a backend service.
+        // We simulate a fetch here.
+        const mockMarkdown = `
 # How to Play ${game.title}
 
 Welcome to the game! Here are the basic controls and objectives.
@@ -55,7 +59,22 @@ ${game.description} Embark on an epic journey to save the festival!
 
 *Good luck, have fun!*
     `;
-    setMarkdown(mockMarkdown);
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500)); 
+        setMarkdown(mockMarkdown);
+      } catch (error) {
+        setMarkdown('Failed to load game description.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (game.markdownPath) {
+      fetchMarkdown();
+    } else {
+        setMarkdown('No description available for this game.');
+        setIsLoading(false);
+    }
   }, [game]);
 
   const toggleFullscreen = () => {
@@ -117,8 +136,8 @@ ${game.description} Embark on an epic journey to save the festival!
             <CardDescription>Instructions, story, and credits.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="p-4 rounded-md bg-background">
-               <SimpleMarkdown text={markdown} />
+            <div className="p-4 rounded-md bg-background min-h-[150px]">
+               {isLoading ? <p>Now Loading...</p> : <SimpleMarkdown text={markdown} />}
             </div>
           </CardContent>
         </Card>

@@ -19,12 +19,13 @@ export default function GameCard({ game, onPlay }: GameCardProps) {
             fill
             className="object-cover"
             data-ai-hint="gameplay screenshot"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         </div>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-lg font-bold">{game.title}</CardTitle>
-        <CardDescription className="mt-2 text-sm">{game.description}</CardDescription>
+        <CardDescription className="mt-2 text-sm line-clamp-2">{game.description}</CardDescription>
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button onClick={() => onPlay(game)} className="w-full transition-transform hover:scale-105 active:scale-95">
