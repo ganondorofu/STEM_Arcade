@@ -11,7 +11,7 @@ export async function addGame(formData: FormData) {
   const markdownText = formData.get('markdownText') as string;
   const backendUrl = formData.get('backendUrl') as string; // Get backendUrl from formData
 
-  if (!title || !description || !markdownText) {
+  if (!title) {
     throw new Error('Missing required text fields');
   }
   

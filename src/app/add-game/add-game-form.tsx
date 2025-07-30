@@ -26,14 +26,10 @@ const formSchema = z.object({
   title: z.string().min(2, {
     message: 'タイトルは2文字以上で入力してください。',
   }),
-  description: z.string().min(10, {
-    message: '説明は10文字以上で入力してください。',
-  }),
-  markdownText: z.string().min(20, {
-    message: 'Markdownテキストは20文字以上で入力してください。'
-  }),
-  zipFile: z.instanceof(File).refine(file => file.size > 0, '.zipファイルは必須です。'),
-  thumbnail: z.instanceof(File).refine(file => file.size > 0, 'サムネイル画像は必須です。'),
+  description: z.string().optional(),
+  markdownText: z.string().optional(),
+  zipFile: z.instanceof(File).optional(),
+  thumbnail: z.instanceof(File).optional(),
 });
 
 export default function AddGameForm() {
@@ -71,10 +67,14 @@ export default function AddGameForm() {
 
         const formData = new FormData();
         formData.append('title', values.title);
-        formData.append('description', values.description);
-        formData.append('markdownText', values.markdownText);
-        formData.append('zipFile', values.zipFile);
-        formData.append('thumbnail', values.thumbnail);
+        formData.append('description', values.description || '');
+        formData.append('markdownText', values.markdownText || '');
+        if (values.zipFile) {
+            formData.append('zipFile', values.zipFile);
+        }
+        if (values.thumbnail) {
+            formData.append('thumbnail', values.thumbnail);
+        }
         formData.append('backendUrl', backendUrl);
         
         try {
@@ -116,7 +116,7 @@ export default function AddGameForm() {
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>短い説明</FormLabel>
+                                    <FormLabel>短い説明（任意）</FormLabel>
                                     <FormControl>
                                         <Textarea rows={2} placeholder="ゲームカードに表示される、短くキャッチーな説明文。" {...field} />
                                     </FormControl>
@@ -129,7 +129,7 @@ export default function AddGameForm() {
                             name="markdownText"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>ゲーム詳細 (Markdown対応)</FormLabel>
+                                    <FormLabel>ゲーム詳細 (Markdown対応, 任意)</FormLabel>
                                     <FormControl>
                                         <Textarea rows={8} placeholder="操作方法、ストーリー、クレジットなどをMarkdownで記述してください。" {...field} />
                                     </FormControl>
@@ -145,7 +145,7 @@ export default function AddGameForm() {
                             name="zipFile"
                             render={({ field: { onChange, ...fieldProps }}) => (
                                 <FormItem>
-                                    <FormLabel>ゲームのZIPファイル</FormLabel>
+                                    <FormLabel>ゲームのZIPファイル（任意）</FormLabel>
                                     <FormControl>
                                         <Input type="file" accept=".zip" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} />
                                     </FormControl>
@@ -159,7 +159,7 @@ export default function AddGameForm() {
                             name="thumbnail"
                             render={({ field: { onChange, ...fieldProps }}) => (
                                 <FormItem>
-                                    <FormLabel>サムネイル画像</FormLabel>
+                                    <FormLabel>サムネイル画像（任意）</FormLabel>
                                     <FormControl>
                                         <Input type="file" accept="image/png, image/jpeg" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} />
                                     </FormControl>
