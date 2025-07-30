@@ -21,7 +21,7 @@ export async function addGame(formData: FormData) {
 
   // Generate a unique ID on the client and pass it along
   const gameId = `game_${Math.random().toString(36).substring(2, 11)}`;
-  formData.append('gameId', gameId);
+  formData.append('id', gameId);
 
   // The Python server will handle both file upload and Firestore document creation.
   const response = await fetch(`${backendUrl}/upload`, {
