@@ -11,7 +11,7 @@ export default function Header() {
 
   const navLinks = [
     { href: '/add-game', label: 'Add Game', icon: PlusCircle },
-    { href: '/admin', label: 'Admin Panel', icon: Shield },
+    { href: '/admin', label: 'Admin', icon: Shield },
   ];
 
   return (
@@ -19,16 +19,17 @@ export default function Header() {
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Gamepad2 className="h-6 w-6 text-primary" />
-          <span className="font-bold sm:inline-block">STEM Arcade</span>
+          <span className="font-bold text-lg sm:inline-block">STEM Arcade</span>
         </Link>
-        <nav className="flex flex-1 items-center space-x-2 sm:space-x-4">
+        <div className="flex-1" />
+        <nav className="flex items-center space-x-1 sm:space-x-2">
           {navLinks.map((link) => (
             <Button
               key={link.href}
               variant="ghost"
               asChild
               className={cn(
-                'text-sm font-medium text-muted-foreground',
+                'text-sm font-medium text-muted-foreground transition-colors hover:text-primary',
                 pathname === link.href && 'text-primary'
               )}
             >

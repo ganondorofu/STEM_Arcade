@@ -1,14 +1,20 @@
 import type { Metadata } from 'next';
-import { PT_Sans } from 'next/font/google';
+import { Noto_Sans_JP, M_PLUS_1p } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import Header from '@/components/layout/header';
 import { Toaster } from "@/components/ui/toaster"
 
-const ptSans = PT_Sans({
+const notoJp = Noto_Sans_JP({
   subsets: ['latin'],
   weight: ['400', '700'],
-  variable: '--font-pt-sans',
+  variable: '--font-noto-sans-jp',
+});
+
+const mplus1p = M_PLUS_1p({
+  subsets: ['latin'],
+  weight: ['400', '700', '800'],
+  variable: '--font-m-plus-1p',
 });
 
 export const metadata: Metadata = {
@@ -23,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn('min-h-screen bg-background font-sans antialiased', ptSans.variable)}>
+      <body className={cn('min-h-screen bg-background font-sans antialiased', notoJp.variable, mplus1p.variable)}>
         <div className="relative flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">{children}</main>
