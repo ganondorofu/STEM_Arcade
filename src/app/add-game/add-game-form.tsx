@@ -72,18 +72,18 @@ export default function AddGameForm() {
         
         // If zipFile is not provided, create an empty one to satisfy backend validation
         if (values.zipFile) {
-            formData.append('zipFile', values.zipFile);
+            formData.append('zip', values.zipFile);
         } else {
             const emptyZip = new Blob([], {type: 'application/zip'});
-            formData.append('zipFile', emptyZip, 'empty.zip');
+            formData.append('zip', emptyZip, 'empty.zip');
         }
 
         // If thumbnail is not provided, create an empty one
         if (values.thumbnail) {
-            formData.append('thumbnail', values.thumbnail);
+            formData.append('img', values.thumbnail);
         } else {
             const emptyPng = new Blob([], {type: 'image/png'});
-            formData.append('thumbnail', emptyPng, 'empty.png');
+            formData.append('img', emptyPng, 'empty.png');
         }
 
         formData.append('backendUrl', backendUrl);
