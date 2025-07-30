@@ -19,7 +19,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-pt-sans)", ...fontFamily.sans],
+        sans: ["var(--font-noto-sans-jp)", ...fontFamily.sans],
       },
       colors: {
         background: 'hsl(var(--background))',

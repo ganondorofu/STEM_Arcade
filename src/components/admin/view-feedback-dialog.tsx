@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ScrollArea } from '../ui/scroll-area';
 import { Card, CardContent } from '../ui/card';
 import { formatDistanceToNow } from 'date-fns';
+import { ja } from 'date-fns/locale';
+
 
 interface ViewFeedbackDialogProps {
   isOpen: boolean;
@@ -18,9 +20,9 @@ export default function ViewFeedbackDialog({ isOpen, setIsOpen, game, feedbacks 
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Feedback for {game.title}</DialogTitle>
+          <DialogTitle>「{game.title}」へのフィードバック</DialogTitle>
           <DialogDescription>
-            Here's what players had to say. Total comments: {feedbacks.length}
+            プレイヤーからの感想です。合計コメント数: {feedbacks.length}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-72 w-full rounded-md border">
@@ -31,14 +33,14 @@ export default function ViewFeedbackDialog({ isOpen, setIsOpen, game, feedbacks 
                   <CardContent className="p-4">
                     <p className="text-sm">{feedback.comment}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {formatDistanceToNow(new Date(feedback.timestamp), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(feedback.timestamp), { addSuffix: true, locale: ja })}
                     </p>
                   </CardContent>
                 </Card>
               ))
             ) : (
               <div className="flex items-center justify-center h-full text-center">
-                <p className="text-muted-foreground">No feedback for this game yet.</p>
+                <p className="text-muted-foreground">このゲームへのフィードバックはまだありません。</p>
               </div>
             )}
           </div>

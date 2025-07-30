@@ -73,13 +73,13 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
       await deleteGame(selectedGame.id);
       setGames(games.filter(g => g.id !== selectedGame.id));
       toast({
-        title: "Game Deleted",
-        description: `"${selectedGame.title}" has been removed from the arcade.`
+        title: "ゲームを削除しました",
+        description: `「${selectedGame.title}」をアーケードから削除しました。`
       });
     } catch (error) {
        toast({
-        title: "Error",
-        description: "Failed to delete the game.",
+        title: "エラー",
+        description: "ゲームの削除に失敗しました。",
         variant: "destructive"
       });
     } finally {
@@ -102,18 +102,18 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
     <>
       <Card>
         <CardHeader>
-            <CardTitle>Game Management</CardTitle>
+            <CardTitle>ゲーム管理</CardTitle>
             <CardDescription>
-                A list of all games currently in the arcade.
+                アーケードに現在登録されている全ゲームのリストです。
             </CardDescription>
         </CardHeader>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead className="hidden md:table-cell">Description</TableHead>
-              <TableHead className="hidden lg:table-cell">Date Added</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>タイトル</TableHead>
+              <TableHead className="hidden md:table-cell">説明</TableHead>
+              <TableHead className="hidden lg:table-cell">追加日</TableHead>
+              <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -132,15 +132,15 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleEdit(game)}>
                         <Edit className="mr-2 h-4 w-4" />
-                        Edit Details
+                        詳細を編集
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleViewFeedback(game)}>
                         <MessageSquare className="mr-2 h-4 w-4" />
-                        View Feedback
+                        フィードバックを見る
                       </DropdownMenuItem>
                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(game)}>
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Game
+                        ゲームを削除
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -150,7 +150,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
              {games.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center">
-                        No games found.
+                        ゲームが見つかりません。
                     </TableCell>
                 </TableRow>
             )}
@@ -175,15 +175,14 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogTitle>本当に削除しますか？</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the
-                        game "{selectedGame.title}" and all of its associated data from Firestore. File assets on the server will need to be removed manually.
+                        この操作は取り消せません。ゲーム「{selectedGame.title}」とその関連データがFirestoreから完全に削除されます。サーバー上のファイルアセットは手動で削除する必要があります。
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={confirmDelete}>Continue</AlertDialogAction>
+                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                    <AlertDialogAction onClick={confirmDelete}>削除を続行</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

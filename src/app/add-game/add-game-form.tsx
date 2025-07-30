@@ -23,16 +23,16 @@ import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   title: z.string().min(2, {
-    message: 'Title must be at least 2 characters.',
+    message: 'タイトルは2文字以上で入力してください。',
   }),
   description: z.string().min(10, {
-    message: 'Description must be at least 10 characters.',
+    message: '説明は10文字以上で入力してください。',
   }),
   markdownText: z.string().min(20, {
-    message: 'Markdown text must be at least 20 characters.'
+    message: 'Markdownテキストは20文字以上で入力してください。'
   }),
-  zipFile: z.instanceof(File).refine(file => file.size > 0, 'A .zip file is required.'),
-  thumbnail: z.instanceof(File).refine(file => file.size > 0, 'A thumbnail image is required.'),
+  zipFile: z.instanceof(File).refine(file => file.size > 0, '.zipファイルは必須です。'),
+  thumbnail: z.instanceof(File).refine(file => file.size > 0, 'サムネイル画像は必須です。'),
 });
 
 export default function AddGameForm() {
@@ -60,14 +60,14 @@ export default function AddGameForm() {
         try {
             await addGame(formData);
             toast({
-                title: "Game Added!",
-                description: `${values.title} is now in the arcade.`,
+                title: "ゲームが追加されました！",
+                description: `「${values.title}」がアーケードに登場しました。`,
             });
             router.push('/');
         } catch (error) {
              toast({
-                title: "Upload Failed",
-                description: error instanceof Error ? error.message : "Could not add the game. Please try again.",
+                title: "アップロード失敗",
+                description: error instanceof Error ? error.message : "ゲームの追加に失敗しました。もう一度お試しください。",
                 variant: "destructive",
             });
         }
@@ -83,9 +83,9 @@ export default function AddGameForm() {
                             name="title"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Game Title</FormLabel>
+                                    <FormLabel>ゲームタイトル</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="e.g., Space Escape" {...field} />
+                                        <Input placeholder="例：宇宙脱出ゲーム" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -96,9 +96,9 @@ export default function AddGameForm() {
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Short Description</FormLabel>
+                                    <FormLabel>短い説明</FormLabel>
                                     <FormControl>
-                                        <Textarea rows={2} placeholder="A short, catchy description for the game card." {...field} />
+                                        <Textarea rows={2} placeholder="ゲームカードに表示される、短くキャッチーな説明文。" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -109,12 +109,12 @@ export default function AddGameForm() {
                             name="markdownText"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Game Details (Markdown)</FormLabel>
+                                    <FormLabel>ゲーム詳細 (Markdown対応)</FormLabel>
                                     <FormControl>
-                                        <Textarea rows={8} placeholder="Use Markdown for instructions, story, credits, etc." {...field} />
+                                        <Textarea rows={8} placeholder="操作方法、ストーリー、クレジットなどをMarkdownで記述してください。" {...field} />
                                     </FormControl>
                                      <FormDescription>
-                                        You can use Markdown syntax like # Title, ## Subtitle, and --- for dividers.
+                                        # 見出し, ## 小見出し, --- 区切り線などが使えます。
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -125,11 +125,11 @@ export default function AddGameForm() {
                             name="zipFile"
                             render={({ field: { onChange, ...fieldProps }}) => (
                                 <FormItem>
-                                    <FormLabel>Game ZIP File</FormLabel>
+                                    <FormLabel>ゲームのZIPファイル</FormLabel>
                                     <FormControl>
                                         <Input type="file" accept=".zip" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} />
                                     </FormControl>
-                                    <FormDescription>The exported WebGL build from Unity, zipped.</FormDescription>
+                                    <FormDescription>UnityからWebGLビルドしたものをzip圧縮してください。</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -139,18 +139,18 @@ export default function AddGameForm() {
                             name="thumbnail"
                             render={({ field: { onChange, ...fieldProps }}) => (
                                 <FormItem>
-                                    <FormLabel>Thumbnail Image</FormLabel>
+                                    <FormLabel>サムネイル画像</FormLabel>
                                     <FormControl>
                                         <Input type="file" accept="image/png, image/jpeg" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} />
                                     </FormControl>
-                                    <FormDescription>A cool image for the game card (PNG or JPG). This will be saved as `img.png`</FormDescription>
+                                    <FormDescription>ゲームカードに表示する画像 (PNG or JPG)。`img.png`として保存されます。</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                         <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                             <UploadCloud className="mr-2 h-5 w-5" />
-                            {isSubmitting ? 'Uploading...' : 'Add Game to Arcade'}
+                            {isSubmitting ? 'アップロード中...' : 'アーケードにゲームを追加'}
                         </Button>
                     </form>
                 </Form>

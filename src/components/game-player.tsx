@@ -17,12 +17,12 @@ const SimpleMarkdown = ({ text }: { text: string }) => {
   const html = text
     .split('\n')
     .map(line => {
-      if (line.startsWith('# ')) return `<h1>${line.substring(2)}</h1>`;
-      if (line.startsWith('## ')) return `<h2>${line.substring(3)}</h2>`;
-      if (line.startsWith('### ')) return `<h3>${line.substring(4)}</h3>`;
+      if (line.startsWith('# ')) return `<h1 class="text-2xl font-bold mt-4 mb-2 text-primary">${line.substring(2)}</h1>`;
+      if (line.startsWith('## ')) return `<h2 class="text-xl font-semibold mt-3 mb-1">${line.substring(3)}</h2>`;
+      if (line.startsWith('### ')) return `<h3 class="text-lg font-semibold mt-2 mb-1">${line.substring(4)}</h3>`;
       if (line.trim() === '---') return `<hr class="my-4 border-border" />`;
       if (line.trim() === '') return `<br />`;
-      return `<p>${line}</p>`;
+      return `<p class="text-muted-foreground">${line}</p>`;
     })
     .join('');
 
@@ -41,7 +41,7 @@ export default function GamePlayer({ game, onClose }: GamePlayerProps) {
 
     if (!document.fullscreenElement) {
       iframeContainerRef.current.requestFullscreen().catch(err => {
-        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        alert(`全画面表示への切り替えに失敗しました: ${err.message} (${err.name})`);
       });
     } else {
       document.exitFullscreen();
@@ -63,7 +63,7 @@ export default function GamePlayer({ game, onClose }: GamePlayerProps) {
         <h2 className="text-3xl font-bold text-primary">{game.title}</h2>
         <Button variant="ghost" onClick={onClose}>
           <XCircle className="mr-2" />
-          Close Game
+          ゲームを閉じる
         </Button>
       </div>
       
@@ -79,7 +79,7 @@ export default function GamePlayer({ game, onClose }: GamePlayerProps) {
           variant="secondary"
           size="icon"
           className="absolute top-4 right-4 z-10"
-          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          aria-label={isFullscreen ? '全画面表示を終了' : '全画面表示にする'}
         >
           {isFullscreen ? <Minimize /> : <Maximize />}
         </Button>
@@ -90,9 +90,9 @@ export default function GamePlayer({ game, onClose }: GamePlayerProps) {
           <CardHeader>
             <CardTitle className="flex items-center">
               <FileText className="mr-3 text-primary"/>
-              About This Game
+              ゲームについて
             </CardTitle>
-            <CardDescription>Instructions, story, and credits.</CardDescription>
+            <CardDescription>操作方法、ストーリー、クレジットなど</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="p-4 rounded-md bg-background min-h-[150px]">

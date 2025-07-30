@@ -12,7 +12,7 @@ async function getGames(): Promise<Game[]> {
         const gamesList = gameSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Game));
         return gamesList;
     } catch (error) {
-        console.error("Failed to fetch games for admin page:", error);
+        console.error("管理者ページのゲーム読み込みに失敗しました:", error);
         return [];
     }
 }
@@ -25,9 +25,9 @@ export default async function AdminPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-primary">Admin Panel</h1>
+        <h1 className="text-4xl font-bold text-primary">管理者パネル</h1>
         <p className="mt-2 text-muted-foreground">
-          Manage games, view feedback, and keep the arcade running smoothly.
+          ゲームの管理、フィードバックの確認などを行えます。
         </p>
       </div>
 

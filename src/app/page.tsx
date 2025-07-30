@@ -24,7 +24,7 @@ export default function Home() {
         const gamesList = gameSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Game));
         setGames(gamesList);
       } catch (error) {
-        console.error("Error fetching games:", error);
+        console.error("ゲームの読み込みに失敗しました:", error);
         // You could show a toast message here
       } finally {
         setLoading(false);
@@ -51,10 +51,10 @@ export default function Home() {
         <>
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
-              BunkaSai Arcade
+              STEM Arcade
             </h1>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Welcome! Choose a game below and start playing. Created by students for our cultural festival.
+              文化祭へようこそ！下のリストから気になるゲームを選んで遊んでみよう。
             </p>
           </div>
           {loading ? (
@@ -77,8 +77,8 @@ export default function Home() {
               {games.length === 0 && !loading && (
                 <div className="col-span-full text-center py-20 rounded-xl bg-card border border-dashed">
                   <Gamepad2 className="mx-auto h-16 w-16 text-muted-foreground" />
-                  <h3 className="mt-4 text-xl font-semibold">No Games Yet</h3>
-                  <p className="mt-2 text-muted-foreground">Check back later or add a new game!</p>
+                  <h3 className="mt-4 text-xl font-semibold">まだゲームがありません</h3>
+                  <p className="mt-2 text-muted-foreground">新しいゲームが追加されるのをお待ちください！</p>
                 </div>
               )}
             </div>

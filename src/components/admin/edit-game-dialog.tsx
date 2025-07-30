@@ -21,9 +21,9 @@ interface EditGameDialogProps {
 }
 
 const formSchema = z.object({
-  title: z.string().min(2, 'Title must be at least 2 characters.'),
-  description: z.string().min(10, 'Description must be at least 10 characters.'),
-  markdownText: z.string().min(20, "Markdown must be at least 20 characters."),
+  title: z.string().min(2, 'タイトルは2文字以上で入力してください。'),
+  description: z.string().min(10, '説明は10文字以上で入力してください。'),
+  markdownText: z.string().min(20, "Markdownは20文字以上で入力してください。"),
   // File inputs are now for re-upload and are optional
   zipFile: z.instanceof(File).optional(),
   thumbnail: z.instanceof(File).optional(),
@@ -58,9 +58,9 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
     if (values.thumbnail) reuploadData.append('thumbnail', values.thumbnail);
 
     if (reuploadData.has('zipFile') || reuploadData.has('thumbnail')) {
-        console.log("Re-uploading files for game:", game.id);
+        console.log("ファイルを再アップロードします:", game.id);
         // await fetch(`/api/reupload/${game.id}`, { method: 'POST', body: reuploadData });
-        toast({ title: "File Re-upload Simulated", description: "In a real app, files would be re-uploaded to the Python server."})
+        toast({ title: "ファイル再アップロード（シミュレーション）", description: "実際のアプリでは、ここでファイルがPythonサーバーに再アップロードされます。"})
     }
 
     try {
@@ -73,14 +73,14 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
         };
         onGameUpdate(updatedGame);
         toast({
-            title: "Game Updated!",
-            description: `"${updatedGame.title}" has been successfully updated.`,
+            title: "ゲーム情報を更新しました！",
+            description: `「${updatedGame.title}」の詳細が正常に更新されました。`,
         });
         setIsOpen(false);
     } catch (error) {
          toast({
-            title: "Update Failed",
-            description: "Could not update game details in Firestore.",
+            title: "更新失敗",
+            description: "Firestoreのゲーム詳細更新に失敗しました。",
             variant: "destructive",
         });
     }
@@ -90,9 +90,9 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Edit Game: {game.title}</DialogTitle>
+          <DialogTitle>ゲーム編集: {game.title}</DialogTitle>
           <DialogDescription>
-            Update the game details below. To keep existing files, just leave the file inputs empty.
+            ゲーム詳細を更新します。既存ファイルを維持する場合は、ファイル入力欄は空のままにしてください。
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -102,7 +102,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Game Title</FormLabel>
+                  <FormLabel>ゲームタイトル</FormLabel>
                   <FormControl><Input {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -113,7 +113,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Short Description</FormLabel>
+                  <FormLabel>短い説明</FormLabel>
                   <FormControl><Textarea {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -124,24 +124,24 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
               name="markdownText"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Game Details (Markdown)</FormLabel>
+                  <FormLabel>ゲーム詳細 (Markdown)</FormLabel>
                   <FormControl><Textarea rows={10} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            <p className="text-sm font-medium pt-4">Re-upload Files (Optional)</p>
-            <FormDescription>These files will be sent to the Python server to overwrite existing ones.</FormDescription>
+            <p className="text-sm font-medium pt-4">ファイルの再アップロード（任意）</p>
+            <FormDescription>これらのファイルはPythonサーバーに送信され、既存のファイルを上書きします。</FormDescription>
             
              <FormField
                 control={form.control}
                 name="zipFile"
                 render={({ field: { onChange, ...fieldProps }}) => (
                     <FormItem>
-                        <FormLabel>Game ZIP File</FormLabel>
+                        <FormLabel>ゲームZIPファイル</FormLabel>
                         <FormControl><Input type="file" accept=".zip" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl>
-                        <FormDescription>Upload a new ZIP to replace the current game build.</FormDescription>
+                        <FormDescription>現在のゲームビルドを置き換える新しいZIPをアップロードします。</FormDescription>
                         <FormMessage />
                     </FormItem>
                 )}
@@ -151,17 +151,17 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate }
                 name="thumbnail"
                 render={({ field: { onChange, ...fieldProps }}) => (
                     <FormItem>
-                        <FormLabel>Thumbnail Image (img.png)</FormLabel>
+                        <FormLabel>サムネイル画像 (img.png)</FormLabel>
                         <FormControl><Input type="file" accept="image/png, image/jpeg" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl>
-                         <FormDescription>Upload a new image to replace the current thumbnail.</FormDescription>
+                         <FormDescription>現在のサムネイルを置き換える新しい画像をアップロードします。</FormDescription>
                         <FormMessage />
                     </FormItem>
                 )}
             />
             <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>キャンセル</Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                {form.formState.isSubmitting ? "保存中..." : "変更を保存"}
               </Button>
             </DialogFooter>
           </form>

@@ -20,8 +20,8 @@ export default function FeedbackForm({ gameId }: FeedbackFormProps) {
     e.preventDefault();
     if (comment.trim() === '') {
         toast({
-            title: "Oops!",
-            description: "Please enter a comment before submitting.",
+            title: "おっと！",
+            description: "コメントを入力してから送信してください。",
             variant: "destructive",
         })
         return;
@@ -33,8 +33,8 @@ export default function FeedbackForm({ gameId }: FeedbackFormProps) {
     
     setSubmitted(true);
     toast({
-        title: "Thank you!",
-        description: "Your feedback has been submitted.",
+        title: "ありがとうございます！",
+        description: "フィードバックが送信されました。",
     });
   };
 
@@ -45,8 +45,8 @@ export default function FeedbackForm({ gameId }: FeedbackFormProps) {
           <MessageSquareHeart className="mx-auto h-12 w-12 text-primary" />
         </CardHeader>
         <CardContent>
-          <CardTitle>Thanks for your feedback!</CardTitle>
-          <CardDescription className="mt-2">We appreciate you taking the time to help us improve.</CardDescription>
+          <CardTitle>フィードバックを送信しました！</CardTitle>
+          <CardDescription className="mt-2">ご協力いただきありがとうございました。</CardDescription>
         </CardContent>
       </Card>
     );
@@ -55,20 +55,20 @@ export default function FeedbackForm({ gameId }: FeedbackFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Send Anonymous Feedback</CardTitle>
-        <CardDescription>Your comments are valuable to the creators!</CardDescription>
+        <CardTitle>匿名でフィードバックを送る</CardTitle>
+        <CardDescription>あなたの感想が、制作者の力になります！</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Textarea
-            placeholder="This game was so much fun! Maybe you could add..."
+            placeholder="このゲーム、すごく楽しかったです！もしできれば..."
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={4}
           />
           <Button type="submit" className="w-full" variant="secondary">
             <Send className="mr-2 h-4 w-4" />
-            Submit Feedback
+            フィードバックを送信
           </Button>
         </form>
       </CardContent>

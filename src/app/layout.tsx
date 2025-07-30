@@ -1,20 +1,20 @@
 import type { Metadata } from 'next';
-import { PT_Sans } from 'next/font/google';
+import { Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import Header from '@/components/layout/header';
 import { Toaster } from "@/components/ui/toaster"
 
-const ptSans = PT_Sans({
+const notoSansJp = Noto_Sans_JP({
   subsets: ['latin'],
   weight: ['400', '700'],
-  variable: '--font-pt-sans',
+  variable: '--font-noto-sans-jp',
 });
 
 
 export const metadata: Metadata = {
-  title: 'BunkaSai Arcade',
-  description: 'A collection of WebGL games for the cultural festival.',
+  title: 'STEM Arcade',
+  description: '文化祭で展示するWebGLゲームのコレクションです。',
 };
 
 export default function RootLayout({
@@ -23,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={cn('min-h-screen bg-background font-sans antialiased', ptSans.variable)}>
+    <html lang="ja" className="dark" suppressHydrationWarning>
+      <body className={cn('min-h-screen bg-background font-sans antialiased', notoSansJp.variable)}>
         <div className="relative flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">{children}</main>
