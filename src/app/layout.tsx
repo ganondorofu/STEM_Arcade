@@ -12,7 +12,7 @@ const ptSans = PT_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'BunkaSai Arcade',
+  title: 'STEM Arcade',
   description: 'A collection of WebGL games for the cultural festival.',
 };
 
