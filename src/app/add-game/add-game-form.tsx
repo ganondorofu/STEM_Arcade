@@ -20,6 +20,7 @@ import { UploadCloud } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast"
 import { addGame } from './actions';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -38,6 +39,15 @@ const formSchema = z.object({
 export default function AddGameForm() {
     const { toast } = useToast();
     const router = useRouter();
+    const [backendUrl, setBackendUrl] = useState('');
+
+    useEffect(() => {
+        const url = localStorage.getItem('backendUrl');
+        if (url) {
+            setBackendUrl(url);
+        }
+    }, []);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -47,15 +57,25 @@ export default function AddGameForm() {
         },
     });
 
-    const {formState: { isSubmitting }, setError} = form;
+    const {formState: { isSubmitting }} = form;
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
+        if (!backendUrl) {
+            toast({
+                title: "バックエンドURL未設定",
+                description: "管理者パネルでバックエンドURLを設定してください。",
+                variant: "destructive",
+            });
+            return;
+        }
+
         const formData = new FormData();
         formData.append('title', values.title);
         formData.append('description', values.description);
         formData.append('markdownText', values.markdownText);
         formData.append('zipFile', values.zipFile);
         formData.append('thumbnail', values.thumbnail);
+        formData.append('backendUrl', backendUrl);
         
         try {
             await addGame(formData);
@@ -63,7 +83,7 @@ export default function AddGameForm() {
                 title: "ゲームが追加されました！",
                 description: `「${values.title}」がアーケードに登場しました。`,
             });
-            router.push('/');
+            router.push('/admin'); // Redirect to admin to see the new game
         } catch (error) {
              toast({
                 title: "アップロード失敗",

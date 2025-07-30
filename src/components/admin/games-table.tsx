@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Game, Feedback } from '@/lib/types';
 import {
   Table,
@@ -50,9 +50,21 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [backendUrl, setBackendUrl] = useState('');
   const { toast } = useToast();
 
+   useEffect(() => {
+    const url = localStorage.getItem('backendUrl');
+    if (url) {
+      setBackendUrl(url);
+    }
+  }, []);
+
   const handleEdit = (game: Game) => {
+    if (!backendUrl) {
+      toast({ title: "バックエンドURL未設定", description: "操作の前に、管理者ページでバックエンドURLを設定してください。", variant: "destructive" });
+      return;
+    }
     setSelectedGame(game);
     setIsEditDialogOpen(true);
   };
@@ -63,14 +75,18 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
   };
 
   const handleDelete = (game: Game) => {
+    if (!backendUrl) {
+      toast({ title: "バックエンドURL未設定", description: "操作の前に、管理者ページでバックエンドURLを設定してください。", variant: "destructive" });
+      return;
+    }
     setSelectedGame(game);
     setIsDeleteDialogOpen(true);
   }
   
   const confirmDelete = async () => {
-    if (!selectedGame) return;
+    if (!selectedGame || !backendUrl) return;
     try {
-      await deleteGame(selectedGame.id);
+      await deleteGame(selectedGame.id, backendUrl);
       setGames(games.filter(g => g.id !== selectedGame.id));
       toast({
         title: "ゲームを削除しました",
@@ -79,7 +95,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
     } catch (error) {
        toast({
         title: "エラー",
-        description: "ゲームの削除に失敗しました。",
+        description: `ゲームの削除に失敗しました: ${error instanceof Error ? error.message : ''}`,
         variant: "destructive"
       });
     } finally {
@@ -132,7 +148,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleEdit(game)}>
                         <Edit className="mr-2 h-4 w-4" />
-                        詳細を編集
+                        編集
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleViewFeedback(game)}>
                         <MessageSquare className="mr-2 h-4 w-4" />
@@ -140,7 +156,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
                       </DropdownMenuItem>
                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(game)}>
                         <Trash2 className="mr-2 h-4 w-4" />
-                        ゲームを削除
+                        削除
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -165,6 +181,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
                 setIsOpen={setIsEditDialogOpen}
                 game={selectedGame}
                 onGameUpdate={handleUpdateGame}
+                backendUrl={backendUrl}
             />
             <ViewFeedbackDialog 
                 isOpen={isFeedbackDialogOpen}
@@ -177,7 +194,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
                     <AlertDialogHeader>
                     <AlertDialogTitle>本当に削除しますか？</AlertDialogTitle>
                     <AlertDialogDescription>
-                        この操作は取り消せません。ゲーム「{selectedGame.title}」とその関連データがFirestoreから完全に削除されます。サーバー上のファイルアセットは手動で削除する必要があります。
+                        この操作は取り消せません。ゲーム「{selectedGame.title}」とその関連データ (ファイルとFirestoreドキュメント) が完全に削除されます。
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
