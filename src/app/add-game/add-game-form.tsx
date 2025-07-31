@@ -23,8 +23,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const formSchema = z.object({
-  title: z.string().min(2, {
-    message: 'タイトルは2文字以上で入力してください。',
+  title: z.string().min(1, {
+    message: 'タイトルは必須です。',
   }),
   description: z.string().optional(),
   markdownText: z.string().optional(),
@@ -77,16 +77,16 @@ export default function AddGameForm() {
         if (values.thumbnail) {
             formData.append('img', values.thumbnail);
         }
-
-        formData.append('backendUrl', backendUrl);
         
+        formData.append('backendUrl', backendUrl);
+
         try {
             await addGame(formData);
             toast({
                 title: "ゲームが追加されました！",
                 description: `「${values.title}」がアーケードに登場しました。`,
             });
-            router.push('/admin'); // Redirect to admin to see the new game
+            router.push('/admin'); 
         } catch (error) {
              toast({
                 title: "アップロード失敗",

@@ -1,13 +1,12 @@
 'use server';
 
 import { db } from "@/lib/firebase";
-import { Game } from "@/lib/types";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { revalidatePath } from "next/cache";
 
 export async function updateGame(gameId: string, title: string, description: string, markdownText: string): Promise<void> {
   if (!gameId || !title) {
-    throw new Error("Missing required fields for update");
+    throw new Error("更新にはゲームIDとタイトルが必須です。");
   }
 
   const gameRef = doc(db, "games", gameId);
@@ -24,16 +23,16 @@ export async function updateGame(gameId: string, title: string, description: str
 
 export async function deleteGame(gameId: string, backendUrl: string) {
   if (!gameId) {
-    throw new Error('Game ID is required for deletion');
+    throw new Error('削除にはゲームIDが必要です。');
   }
    if (!backendUrl) {
-    throw new Error('Backend URL is not configured.');
+    throw new Error('バックエンドURLが設定されていません。');
   }
 
   const formData = new FormData();
   formData.append('id', gameId);
 
-  // Also delete files from the Python server
+  // 1. Delete files from the Python server
   const response = await fetch(`${backendUrl}/delete`, { 
     method: 'POST',
     body: formData,
@@ -41,32 +40,27 @@ export async function deleteGame(gameId: string, backendUrl: string) {
 
   if (!response.ok) {
      const errorBody = await response.text();
-     console.error("File deletion failed:", errorBody);
-     throw new Error(`File deletion on backend failed: ${response.statusText}. ${errorBody}`);
+     console.error("バックエンドでのファイル削除に失敗しました:", errorBody);
+     // Don't throw an error here, allow Firestore deletion to proceed
+     // In a real app, you might want more robust error handling / logging
   }
 
+  // 2. Delete the document from Firestore
   const gameRef = doc(db, "games", gameId);
   await deleteDoc(gameRef);
 
+  // 3. Revalidate paths
   revalidatePath('/');
   revalidatePath('/admin');
 }
 
 export async function reuploadFiles(formData: FormData) {
-    const gameId = formData.get('gameId');
+    const gameId = formData.get('id');
     const backendUrl = formData.get('backendUrl');
 
     if (!gameId || !backendUrl) {
-        throw new Error("Game ID or Backend URL is missing.");
+        throw new Error("ゲームIDまたはバックエンドURLがありません。");
     }
-    
-    // The Python server expects the id in the form data, not as a path parameter.
-    formData.append('id', gameId as string);
-
-    // We don't need to send the backendUrl in the body
-    formData.delete('backendUrl');
-    formData.delete('gameId');
-
 
     const response = await fetch(`${backendUrl}/reupload`, {
         method: 'POST',
@@ -75,9 +69,11 @@ export async function reuploadFiles(formData: FormData) {
 
     if (!response.ok) {
         const errorBody = await response.text();
-        console.error("Re-upload failed:", errorBody);
-        throw new Error(`Re-upload failed: ${response.statusText}. ${errorBody}`);
+        console.error("再アップロードに失敗しました:", errorBody);
+        throw new Error(`再アップロードに失敗しました: ${response.statusText}. ${errorBody}`);
     }
+
+    // Revalidate paths to show potential thumbnail changes
     revalidatePath('/');
     revalidatePath('/admin');
 }

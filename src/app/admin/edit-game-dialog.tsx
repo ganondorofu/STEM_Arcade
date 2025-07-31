@@ -9,7 +9,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { updateGame, reuploadFiles } from '@/app/admin/actions';
 
@@ -22,7 +22,7 @@ interface EditGameDialogProps {
 }
 
 const formSchema = z.object({
-  title: z.string().min(2, 'タイトルは2文字以上で入力してください。'),
+  title: z.string().min(1, 'タイトルは必須です。'),
   description: z.string().optional(),
   markdownText: z.string().optional(),
   zipFile: z.instanceof(File).optional(),
@@ -32,6 +32,9 @@ const formSchema = z.object({
 export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, backendUrl }: EditGameDialogProps) {
   const { toast } = useToast();
   const [isReuploading, setIsReuploading] = useState(false);
+  const zipInputRef = useRef<HTMLInputElement>(null);
+  const thumbInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,68 +55,61 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
   }, [game, form]);
 
   const handleReupload = async () => {
-     if (!backendUrl) {
-        toast({ title: "バックエンドURL未設定", description: "管理者ページでURLを設定してください。", variant: "destructive" });
-        return;
+    if (!backendUrl) {
+      toast({ title: "バックエンドURL未設定", description: "管理者ページでURLを設定してください。", variant: "destructive" });
+      return;
     }
     const { zipFile, thumbnail } = form.getValues();
     if (!zipFile && !thumbnail) {
-        toast({ title: "ファイル未選択", description: "再アップロードするファイルを選択してください。", variant: "destructive" });
-        return;
+      toast({ title: "ファイル未選択", description: "再アップロードするファイルを選択してください。", variant: "destructive" });
+      return;
     }
 
     const reuploadData = new FormData();
-    // Use the correct keys 'id', 'zip', 'img' that the backend expects
     reuploadData.append('id', game.id); 
     if (zipFile) reuploadData.append('zip', zipFile);
     if (thumbnail) reuploadData.append('img', thumbnail);
-    
-    // We need to pass the backendUrl to the server action
     reuploadData.append('backendUrl', backendUrl);
-    // Append gameId for the action as well
-    reuploadData.append('gameId', game.id);
     
     setIsReuploading(true);
     try {
-        await reuploadFiles(reuploadData);
-        toast({ title: "ファイル再アップロード成功！", description: "ファイルが正常に更新されました。" });
-        // Optionally clear the file inputs
-        form.setValue('zipFile', undefined);
-        form.setValue('thumbnail', undefined);
-        // This is a more reliable way to reset file inputs
-        const zipInput = document.querySelector('input[name="zipFile"]') as HTMLInputElement | null;
-        if (zipInput) zipInput.value = '';
-        const thumbInput = document.querySelector('input[name="thumbnail"]') as HTMLInputElement | null;
-        if(thumbInput) thumbInput.value = '';
+      await reuploadFiles(reuploadData);
+      toast({ title: "ファイル再アップロード成功！", description: "ファイルが正常に更新されました。" });
+      
+      // Clear file inputs after successful upload
+      form.setValue('zipFile', undefined);
+      form.setValue('thumbnail', undefined);
+      if (zipInputRef.current) zipInputRef.current.value = '';
+      if (thumbInputRef.current) thumbInputRef.current.value = '';
         
     } catch (error) {
-        toast({ title: "再アップロード失敗", description: error instanceof Error ? error.message : "サーバーエラー", variant: "destructive" });
+      toast({ title: "再アップロード失敗", description: error instanceof Error ? error.message : "サーバーエラー", variant: "destructive" });
     } finally {
-        setIsReuploading(false);
+      setIsReuploading(false);
     }
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-        await updateGame(game.id, values.title, values.description || "", values.markdownText || "");
-        const updatedGame: Game = {
-            ...game,
-            title: values.title,
-            description: values.description || '',
-            markdownText: values.markdownText || '',
-        };
-        onGameUpdate(updatedGame);
-        toast({
-            title: "ゲーム情報を更新しました！",
-            description: `「${updatedGame.title}」の詳細が正常に更新されました。`,
-        });
-        setIsOpen(false);
+      await updateGame(game.id, values.title, values.description || "", values.markdownText || "");
+      const updatedGame: Game = {
+        ...game,
+        title: values.title,
+        description: values.description || '',
+        markdownText: values.markdownText || '',
+      };
+      onGameUpdate(updatedGame);
+      toast({
+        title: "ゲーム情報を更新しました！",
+        description: `「${updatedGame.title}」の詳細が正常に更新されました。`,
+      });
+      setIsOpen(false);
     } catch (error) {
-         toast({
-            title: "更新失敗",
-            description: "Firestoreのゲーム詳細更新に失敗しました。",
-            variant: "destructive",
-        });
+       toast({
+        title: "更新失敗",
+        description: error instanceof Error ? error.message : "ゲーム情報の更新に失敗しました。",
+        variant: "destructive",
+      });
     }
   };
 
@@ -132,10 +128,10 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
             {/* Text fields for update */}
             <FormField control={form.control} name="title" render={({ field }) => ( <FormItem> <FormLabel>ゲームタイトル</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
-            <FormField control={form.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>短い説明</FormLabel> <FormControl><Textarea {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+            <FormField control={form.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>短い説明</FormLabel> <FormControl><Textarea rows={2} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
             <FormField control={form.control} name="markdownText" render={({ field }) => ( <FormItem> <FormLabel>ゲーム詳細 (Markdown)</FormLabel> <FormControl><Textarea rows={10} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
             
-            <DialogFooter className="mt-4">
+            <DialogFooter className="sticky bottom-0 bg-background py-4">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>キャンセル</Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "保存中..." : "テキスト情報を保存"}
@@ -148,12 +144,12 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <p className="text-sm font-medium">ファイルの再アップロード（任意）</p>
               <FormDescription>現在のゲームビルドやサムネイルを置き換える場合に利用します。</FormDescription>
               
-              <FormField control={form.control} name="zipFile" render={({ field: { onChange, value, ...fieldProps }}) => ( <FormItem> <FormLabel>ゲームZIPファイル</FormLabel> <FormControl><Input type="file" accept=".zip" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
-              <FormField control={form.control} name="thumbnail" render={({ field: { onChange, value, ...fieldProps }}) => ( <FormItem> <FormLabel>サムネイル画像</FormLabel> <FormControl><Input type="file" accept="image/png, image/jpeg" {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
+              <FormField control={form.control} name="zipFile" render={({ field: { onChange, value, ...fieldProps }}) => ( <FormItem> <FormLabel>ゲームZIPファイル</FormLabel> <FormControl><Input type="file" accept=".zip" {...fieldProps} ref={zipInputRef} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
+              <FormField control={form.control} name="thumbnail" render={({ field: { onChange, value, ...fieldProps }}) => ( <FormItem> <FormLabel>サムネイル画像</FormLabel> <FormControl><Input type="file" accept="image/png, image/jpeg" ref={thumbInputRef} {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
               
               <DialogFooter>
                   <Button onClick={handleReupload} disabled={!hasFilesForReupload || isReuploading}>
-                      {isReuploading ? "アップロード中..." : "ファイルを再アップロード"}
+                      {isReuploading ? "アップロード中..." : "選択したファイルを再アップロード"}
                   </Button>
               </DialogFooter>
           </div>
