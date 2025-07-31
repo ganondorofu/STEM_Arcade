@@ -55,6 +55,9 @@ export async function deleteGame(gameId: string, backendUrl: string) {
   revalidatePath('/admin');
 }
 
+// This server action is no longer used for file uploads, 
+// as the logic has been moved to the client component to use fetch directly.
+// It is kept here as a placeholder in case other re-upload related logic is needed in the future.
 export async function reuploadFiles(formData: FormData) {
     const gameId = formData.get('id');
     const backendUrl = formData.get('backendUrl');

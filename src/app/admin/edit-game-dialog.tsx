@@ -12,7 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { updateGame, reuploadFiles } from '@/app/admin/actions';
+import { updateGame } from '@/app/admin/actions';
+import { revalidatePath } from 'next/cache';
 
 interface EditGameDialogProps {
   isOpen: boolean;
@@ -114,23 +115,39 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
       toast({ title: "ファイル未選択", description: "再アップロードするファイルを選択してください。", variant: "destructive" });
       return;
     }
+    if (!backendUrl) {
+      toast({ title: "バックエンドURL未設定", description: "操作の前に、管理者ページでバックエンドURLを設定してください。", variant: "destructive" });
+      return;
+    }
 
     const reuploadData = new FormData();
     reuploadData.append('id', game.id);
     if (zipFile) reuploadData.append('zip', zipFile);
     if (thumbnail) reuploadData.append('img', thumbnail);
-    reuploadData.append('backendUrl', backendUrl);
     
     setIsSubmittingFiles(true);
     try {
-      await reuploadFiles(reuploadData);
+      const response = await fetch(`${backendUrl}/reupload`, {
+          method: 'POST',
+          body: reuploadData,
+      });
+
+      if (!response.ok) {
+          const errorBody = await response.text();
+          console.error("再アップロードに失敗しました:", errorBody);
+          throw new Error(`再アップロードに失敗しました: ${response.statusText}. ${errorBody}`);
+      }
+      
       toast({ title: "ファイル再アップロード成功！", description: "ファイルが正常に更新されました。" });
       
       // Reset form and clear file inputs manually
       fileForm.reset();
       if (zipInputRef.current) zipInputRef.current.value = '';
       if (thumbInputRef.current) thumbInputRef.current.value = '';
-        
+
+      // Trigger a re-render of the game card to show the new thumbnail
+      onGameUpdate({ ...game }); 
+
     } catch (error) {
       toast({ title: "再アップロード失敗", description: error instanceof Error ? error.message : "サーバーエラー", variant: "destructive" });
     } finally {
