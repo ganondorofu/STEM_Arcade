@@ -10,9 +10,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { updateGame, reuploadFiles } from '@/app/admin/actions';
+import { cn } from '@/lib/utils';
 
 interface EditGameDialogProps {
   isOpen: boolean;
@@ -72,8 +73,12 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
         description: game.description ?? '',
         markdownText: game.markdownText ?? '',
       });
+      fileForm.reset({
+        zipFile: undefined,
+        thumbnail: undefined,
+      })
     }
-  }, [game, isOpen, textForm]);
+  }, [game, isOpen, textForm, fileForm]);
   
   // Handler for text form submission
   const onTextSubmit: SubmitHandler<TextFormValues> = async (values) => {
@@ -91,7 +96,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
         title: "ゲーム情報を更新しました！",
         description: `「${updatedGame.title}」の詳細が正常に更新されました。`,
       });
-      setIsOpen(false);
+      // Do not close dialog on text update
     } catch (error) {
       toast({
         title: "更新失敗",
@@ -136,9 +141,14 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
   
   const hasFilesForReupload = !!fileForm.watch('zipFile') || !!fileForm.watch('thumbnail');
 
+  const ForwardedInput = forwardRef<HTMLInputElement, React.ComponentProps<'input'>>((props, ref) => (
+    <Input {...props} ref={ref} />
+  ));
+  ForwardedInput.displayName = 'ForwardedInput';
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>ゲーム編集: {game.title}</DialogTitle>
           <DialogDescription>
@@ -146,77 +156,89 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
           </DialogDescription>
         </DialogHeader>
 
-        {/* Text Update Form */}
-        <Form {...textForm}>
-          <form onSubmit={textForm.handleSubmit(onTextSubmit)} className="space-y-4 py-4 border-b">
-            <FormField control={textForm.control} name="title" render={({ field }) => ( <FormItem> <FormLabel>ゲームタイトル</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
-            <FormField control={textForm.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>短い説明</FormLabel> <FormControl><Textarea rows={2} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
-            <FormField control={textForm.control} name="markdownText" render={({ field }) => ( <FormItem> <FormLabel>ゲーム詳細 (Markdown)</FormLabel> <FormControl><Textarea rows={8} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>キャンセル</Button>
-              <Button type="submit" disabled={isSubmittingText}>
-                {isSubmittingText ? "保存中..." : "テキスト情報を保存"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+        <div className="overflow-y-auto pr-4 -mr-4 space-y-8">
+            {/* Text Update Form */}
+            <Form {...textForm}>
+            <form onSubmit={textForm.handleSubmit(onTextSubmit)} className="space-y-4 py-4 border-b">
+                <FormField control={textForm.control} name="title" render={({ field }) => ( <FormItem> <FormLabel>ゲームタイトル</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+                <FormField control={textForm.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>短い説明</FormLabel> <FormControl><Textarea rows={2} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+                <FormField control={textForm.control} name="markdownText" render={({ field }) => ( <FormItem> <FormLabel>ゲーム詳細 (Markdown)</FormLabel> <FormControl><Textarea rows={8} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+                
+                <div className='flex justify-end'>
+                    <Button type="submit" disabled={isSubmittingText}>
+                        {isSubmittingText ? "保存中..." : "テキスト情報を保存"}
+                    </Button>
+                </div>
+            </form>
+            </Form>
 
-        {/* File Re-upload Form */}
-        <Form {...fileForm}>
-             <form onSubmit={fileForm.handleSubmit(onFileSubmit)} className="space-y-4 pt-6">
-              <h4 className="text-sm font-medium">ファイルの再アップロード（任意）</h4>
-              <FormDescription>現在のゲームビルドやサムネイルを新しいファイルに置き換えます。</FormDescription>
-              
-              <FormField
-                control={fileForm.control}
-                name="zipFile"
-                render={({ field: { onChange, onBlur, name } }) => (
-                  <FormItem>
-                    <FormLabel>新しいゲームZIPファイル</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept=".zip"
-                        ref={zipInputRef}
-                        onChange={(e) => onChange(e.target.files?.[0])}
-                        onBlur={onBlur}
-                        name={name}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={fileForm.control}
-                name="thumbnail"
-                render={({ field: { onChange, onBlur, name } }) => (
-                  <FormItem>
-                    <FormLabel>新しいサムネイル画像</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept="image/png, image/jpeg"
-                        ref={thumbInputRef}
-                        onChange={(e) => onChange(e.target.files?.[0])}
-                        onBlur={onBlur}
-                        name={name}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                  <Button type="submit" variant="secondary" disabled={!hasFilesForReupload || isSubmittingFiles}>
-                      {isSubmittingFiles ? "アップロード中..." : "選択したファイルを再アップロード"}
-                  </Button>
-              </DialogFooter>
-             </form>
-        </Form>
+            {/* File Re-upload Form */}
+            <Form {...fileForm}>
+                <form onSubmit={fileForm.handleSubmit(onFileSubmit)} className="space-y-4">
+                <h4 className="text-sm font-medium">ファイルの再アップロード（任意）</h4>
+                <FormDescription>現在のゲームビルドやサムネイルを新しいファイルに置き換えます。</FormDescription>
+                
+                <FormField
+                    control={fileForm.control}
+                    name="zipFile"
+                    render={({ field: { onChange, onBlur, name, ref } }) => (
+                    <FormItem>
+                        <FormLabel>新しいゲームZIPファイル</FormLabel>
+                        <FormControl>
+                        <Input
+                            type="file"
+                            accept=".zip"
+                            ref={(e) => {
+                                ref(e)
+                                if(zipInputRef) (zipInputRef.current as any) = e
+                            }}
+                            onChange={(e) => onChange(e.target.files?.[0])}
+                            onBlur={onBlur}
+                            name={name}
+                        />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={fileForm.control}
+                    name="thumbnail"
+                    render={({ field: { onChange, onBlur, name, ref } }) => (
+                    <FormItem>
+                        <FormLabel>新しいサムネイル画像</FormLabel>
+                        <FormControl>
+                        <Input
+                            type="file"
+                            accept="image/png, image/jpeg"
+                            ref={(e) => {
+                                ref(e)
+                                if(thumbInputRef) (thumbInputRef.current as any) = e
+                            }}
+                            onChange={(e) => onChange(e.target.files?.[0])}
+                            onBlur={onBlur}
+                            name={name}
+                        />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                
+                <div className='flex justify-end'>
+                    <Button type="submit" variant="secondary" disabled={!hasFilesForReupload || isSubmittingFiles}>
+                        {isSubmittingFiles ? "アップロード中..." : "選択したファイルを再アップロード"}
+                    </Button>
+                </div>
+                </form>
+            </Form>
+        </div>
+        <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>閉じる</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
+    
