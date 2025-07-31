@@ -164,7 +164,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <FormField
                 control={fileForm.control}
                 name="zipFile"
-                render={({ field }) => (
+                render={({ field: { onChange, onBlur, name } }) => (
                   <FormItem>
                     <FormLabel>ゲームZIPファイル</FormLabel>
                     <FormControl>
@@ -172,7 +172,9 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
                         type="file"
                         accept=".zip"
                         ref={zipInputRef}
-                        onChange={(e) => field.onChange(e.target.files?.[0])}
+                        onChange={(e) => onChange(e.target.files?.[0])}
+                        onBlur={onBlur}
+                        name={name}
                       />
                     </FormControl>
                     <FormMessage />
@@ -182,7 +184,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <FormField
                 control={fileForm.control}
                 name="thumbnail"
-                render={({ field }) => (
+                render={({ field: { onChange, onBlur, name } }) => (
                   <FormItem>
                     <FormLabel>サムネイル画像</FormLabel>
                     <FormControl>
@@ -190,7 +192,9 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
                         type="file"
                         accept="image/png, image/jpeg"
                         ref={thumbInputRef}
-                        onChange={(e) => field.onChange(e.target.files?.[0])}
+                        onChange={(e) => onChange(e.target.files?.[0])}
+                        onBlur={onBlur}
+                        name={name}
                       />
                     </FormControl>
                     <FormMessage />
