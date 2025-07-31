@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { updateGame } from '@/app/admin/actions';
-import { revalidatePath } from 'next/cache';
 
 interface EditGameDialogProps {
   isOpen: boolean;
