@@ -29,7 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import EditGameDialog from './edit-game-dialog';
+import EditGameDialog from '@/app/admin/edit-game-dialog';
 import ViewFeedbackDialog from './view-feedback-dialog';
 import { Card, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { deleteGame } from '@/app/admin/actions';
@@ -51,6 +51,9 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
+  const [gameForFeedback, setGameForFeedback] = useState<Game | null>(null);
+
   const [backendUrl, setBackendUrl] = useState('');
   const { toast } = useToast();
 
@@ -71,7 +74,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
   };
 
   const handleViewFeedback = (game: Game) => {
-    setSelectedGame(game);
+    setGameForFeedback(game);
     setIsFeedbackDialogOpen(true);
   };
 
@@ -80,18 +83,18 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
       toast({ title: "バックエンドURL未設定", description: "操作の前に、管理者ページでバックエンドURLを設定してください。", variant: "destructive" });
       return;
     }
-    setSelectedGame(game);
+    setGameToDelete(game);
     setIsDeleteDialogOpen(true);
   }
   
   const confirmDelete = async () => {
-    if (!selectedGame || !backendUrl) return;
+    if (!gameToDelete || !backendUrl) return;
     try {
-      await deleteGame(selectedGame.id, backendUrl);
-      setGames(games.filter(g => g.id !== selectedGame.id));
+      await deleteGame(gameToDelete.id, backendUrl);
+      setGames(games.filter(g => g.id !== gameToDelete.id));
       toast({
         title: "ゲームを削除しました",
-        description: `「${selectedGame.title}」をアーケードから削除しました。`
+        description: `「${gameToDelete.title}」をアーケードから削除しました。`
       });
     } catch (error) {
        toast({
@@ -101,7 +104,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
       });
     } finally {
         setIsDeleteDialogOpen(false);
-        setSelectedGame(null);
+        setGameToDelete(null);
     }
   }
   
@@ -176,36 +179,50 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
       </Card>
       
       {selectedGame && (
-        <>
-            <EditGameDialog 
-                key={selectedGame.id}
-                isOpen={isEditDialogOpen}
-                setIsOpen={setIsEditDialogOpen}
-                game={selectedGame}
-                onGameUpdate={handleUpdateGame}
-                backendUrl={backendUrl}
-            />
-            <ViewFeedbackDialog 
-                isOpen={isFeedbackDialogOpen}
-                setIsOpen={setIsFeedbackDialogOpen}
-                game={selectedGame}
-                feedbacks={feedbacks.filter(f => f.gameId === selectedGame.id)}
-            />
-            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>本当に削除しますか？</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        この操作は取り消せません。ゲーム「{selectedGame.title}」とその関連データ (ファイルとFirestoreドキュメント) が完全に削除されます。
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                    <AlertDialogAction onClick={confirmDelete}>削除を続行</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </>
+        <EditGameDialog 
+            key={selectedGame.id}
+            isOpen={isEditDialogOpen}
+            setIsOpen={(isOpen) => {
+                setIsEditDialogOpen(isOpen);
+                if (!isOpen) {
+                    setSelectedGame(null);
+                }
+            }}
+            game={selectedGame}
+            onGameUpdate={handleUpdateGame}
+            backendUrl={backendUrl}
+        />
+      )}
+
+      {gameForFeedback && (
+        <ViewFeedbackDialog 
+            isOpen={isFeedbackDialogOpen}
+            setIsOpen={(isOpen) => {
+                setIsFeedbackDialogOpen(isOpen);
+                if (!isOpen) {
+                    setGameForFeedback(null);
+                }
+            }}
+            game={gameForFeedback}
+            feedbacks={feedbacks.filter(f => f.gameId === gameForFeedback.id)}
+        />
+      )}
+
+      {gameToDelete && (
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>本当に削除しますか？</AlertDialogTitle>
+                <AlertDialogDescription>
+                    この操作は取り消せません。ゲーム「{gameToDelete.title}」とその関連データ (ファイルとFirestoreドキュメント) が完全に削除されます。
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setGameToDelete(null)}>キャンセル</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmDelete}>削除を続行</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       )}
     </>
   );

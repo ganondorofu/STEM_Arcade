@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect, forwardRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { updateGame, reuploadFiles } from '@/app/admin/actions';
-import { cn } from '@/lib/utils';
 
 interface EditGameDialogProps {
   isOpen: boolean;
@@ -141,11 +140,6 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
   
   const hasFilesForReupload = !!fileForm.watch('zipFile') || !!fileForm.watch('thumbnail');
 
-  const ForwardedInput = forwardRef<HTMLInputElement, React.ComponentProps<'input'>>((props, ref) => (
-    <Input {...props} ref={ref} />
-  ));
-  ForwardedInput.displayName = 'ForwardedInput';
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
@@ -240,5 +234,3 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
     </Dialog>
   );
 }
-
-    
