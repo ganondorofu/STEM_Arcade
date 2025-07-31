@@ -63,10 +63,15 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
     }
 
     const reuploadData = new FormData();
-    reuploadData.append('gameId', game.id);
-    reuploadData.append('backendUrl', backendUrl);
+    // Use the correct keys 'id', 'zip', 'img' that the backend expects
+    reuploadData.append('id', game.id); 
     if (zipFile) reuploadData.append('zip', zipFile);
     if (thumbnail) reuploadData.append('img', thumbnail);
+    
+    // We need to pass the backendUrl to the server action
+    reuploadData.append('backendUrl', backendUrl);
+    // Append gameId for the action as well
+    reuploadData.append('gameId', game.id);
     
     setIsReuploading(true);
     try {
@@ -75,10 +80,11 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
         // Optionally clear the file inputs
         form.setValue('zipFile', undefined);
         form.setValue('thumbnail', undefined);
-        const fileInput1 = document.querySelector('input[name="zipFile"]') as HTMLInputElement | null;
-        if (fileInput1) fileInput1.value = '';
-        const fileInput2 = document.querySelector('input[name="thumbnail"]') as HTMLInputElement | null;
-        if(fileInput2) fileInput2.value = '';
+        // This is a more reliable way to reset file inputs
+        const zipInput = document.querySelector('input[name="zipFile"]') as HTMLInputElement | null;
+        if (zipInput) zipInput.value = '';
+        const thumbInput = document.querySelector('input[name="thumbnail"]') as HTMLInputElement | null;
+        if(thumbInput) thumbInput.value = '';
         
     } catch (error) {
         toast({ title: "再アップロード失敗", description: error instanceof Error ? error.message : "サーバーエラー", variant: "destructive" });
