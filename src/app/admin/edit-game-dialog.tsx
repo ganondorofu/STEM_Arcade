@@ -43,9 +43,9 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
   const textForm = useForm<z.infer<typeof textFormSchema>>({
     resolver: zodResolver(textFormSchema),
     defaultValues: {
-      title: game?.title || '',
-      description: game?.description || '',
-      markdownText: game?.markdownText || '',
+      title: game?.title ?? '',
+      description: game?.description ?? '',
+      markdownText: game?.markdownText ?? '',
     },
   });
 
@@ -59,11 +59,11 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
 
 
   useEffect(() => {
-    if (game) {
+    if (game && isOpen) {
       textForm.reset({
-        title: game.title || '',
-        description: game.description || '',
-        markdownText: game.markdownText || '',
+        title: game.title ?? '',
+        description: game.description ?? '',
+        markdownText: game.markdownText ?? '',
       });
     }
   }, [game, textForm, isOpen]);
@@ -164,17 +164,15 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <FormField
                 control={fileForm.control}
                 name="zipFile"
-                render={({ field: { onChange, onBlur, name } }) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>ゲームZIPファイル</FormLabel>
                     <FormControl>
                       <Input
                         type="file"
                         accept=".zip"
-                        onChange={(e) => onChange(e.target.files?.[0])}
-                        onBlur={onBlur}
-                        name={name}
                         ref={zipInputRef}
+                        onChange={(e) => field.onChange(e.target.files?.[0])}
                       />
                     </FormControl>
                     <FormMessage />
@@ -184,17 +182,15 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <FormField
                 control={fileForm.control}
                 name="thumbnail"
-                render={({ field: { onChange, onBlur, name } }) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>サムネイル画像</FormLabel>
                     <FormControl>
                       <Input
                         type="file"
                         accept="image/png, image/jpeg"
-                        onChange={(e) => onChange(e.target.files?.[0])}
-                        onBlur={onBlur}
-                        name={name}
                         ref={thumbInputRef}
+                        onChange={(e) => field.onChange(e.target.files?.[0])}
                       />
                     </FormControl>
                     <FormMessage />
