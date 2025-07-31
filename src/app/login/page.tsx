@@ -21,7 +21,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     
-    // 現在の時刻を "HHmm" 形式で取得 (例: 1430)
+    // パスワードは現在の時刻 "HHmm" 形式 (例: 1430)
     const adminPassword = format(new Date(), 'HHmm');
 
     // Simulate a network request
@@ -49,7 +49,7 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">現在の時刻 (HHMM)</Label>
+              <Label htmlFor="password">パスワード</Label>
               <Input
                 id="password"
                 type="password"
@@ -57,7 +57,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                placeholder="例: 0930"
+                placeholder="パスワードを入力"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
