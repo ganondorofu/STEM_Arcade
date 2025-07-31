@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import type { Game } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,6 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
   // Form instance for text fields
   const textForm = useForm<TextFormValues>({
     resolver: zodResolver(textFormSchema),
-    // IMPORTANT: Initialize with game data, ensuring no undefined values
     defaultValues: {
       title: game?.title ?? '',
       description: game?.description ?? '',
