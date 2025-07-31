@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/games/:path*',
-        destination: 'http://localhost:8000/games/:path*', // Assuming Python server runs on port 8000
+        destination: 'http://localhost:5000/games/:path*', // Assuming Python server runs on port 5000
       },
     ]
   },

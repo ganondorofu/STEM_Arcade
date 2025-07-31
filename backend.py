@@ -145,4 +145,4 @@ if __name__ == '__main__':
     # CORS(Cross-Origin Resource Sharing)を許可するための設定
     from flask_cors import CORS
     CORS(app) 
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=5000)
