@@ -91,7 +91,6 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
       await reuploadFiles(reuploadData);
       toast({ title: "ファイル再アップロード成功！", description: "ファイルが正常に更新されました。" });
       
-      // Clear file inputs after successful upload
       fileForm.reset({zipFile: undefined, thumbnail: undefined});
       if (zipInputRef.current) zipInputRef.current.value = '';
       if (thumbInputRef.current) thumbInputRef.current.value = '';
