@@ -2,7 +2,7 @@ import GamesTable from "@/components/admin/games-table";
 import { feedbacks } from "@/lib/data";
 import { Game } from "@/lib/types";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import BackendUrlConfig from "@/components/admin/backend-url-config";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,18 @@ async function getGames(): Promise<Game[]> {
         const gamesCollection = collection(db, 'games');
         const q = query(gamesCollection, orderBy('createdAt', 'desc'));
         const gameSnapshot = await getDocs(q);
-        const gamesList = gameSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Game));
+        const gamesList = gameSnapshot.docs.map(doc => {
+            const data = doc.data();
+            // Convert Firestore Timestamp to a plain object
+            const createdAt = data.createdAt;
+            return {
+                id: doc.id,
+                title: data.title,
+                description: data.description,
+                markdownText: data.markdownText,
+                createdAt: createdAt ? { seconds: createdAt.seconds, nanoseconds: createdAt.nanoseconds } : null,
+            } as Game;
+        });
         return gamesList;
     } catch (error) {
         console.error("管理者ページのゲーム読み込みに失敗しました:", error);
