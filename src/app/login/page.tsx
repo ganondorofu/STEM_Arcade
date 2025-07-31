@@ -9,10 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LogIn } from 'lucide-react';
-
-// For simplicity, the password is hardcoded here.
-// In a real application, this should be handled securely (e.g., environment variables).
-const ADMIN_PASSWORD = 'password';
+import { format } from 'date-fns';
 
 export default function LoginPage() {
   const [password, setPassword] = useState('');
@@ -24,9 +21,12 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     
+    // 現在の時刻を "HHmm" 形式で取得 (例: 1430)
+    const adminPassword = format(new Date(), 'HHmm');
+
     // Simulate a network request
     setTimeout(() => {
-      if (password === ADMIN_PASSWORD) {
+      if (password === adminPassword) {
         login();
       } else {
         toast({
@@ -49,7 +49,7 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">パスワード</Label>
+              <Label htmlFor="password">現在の時刻 (HHMM)</Label>
               <Input
                 id="password"
                 type="password"
@@ -57,6 +57,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                placeholder="例: 0930"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
