@@ -12,7 +12,7 @@ interface GameCardProps {
 
 export default function GameCard({ game, onPlay }: GameCardProps) {
   // Add a timestamp to the image URL to bust the cache when the image is updated.
-  const thumbnailPath = `/games/${game.id}/img.png?t=${Date.now()}`;
+  const thumbnailPath = `/games/${game.id}/img.png?t=${new Date().getTime()}`;
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1.5 bg-secondary border-secondary-foreground/10">
@@ -29,7 +29,7 @@ export default function GameCard({ game, onPlay }: GameCardProps) {
             onError={(e) => {
               // Replace with a local, non-optimized placeholder to prevent loops
               e.currentTarget.src = '/placeholder.png';
-              e.currentTarget.srcset = '/placeholder.png';
+              e.currentTarget.srcset = '';
             }}
           />
         </div>
