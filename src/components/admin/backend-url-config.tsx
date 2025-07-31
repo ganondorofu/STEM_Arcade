@@ -1,47 +1,47 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Server } from 'lucide-react';
+import { Server, Loader2 } from 'lucide-react';
+import { getBackendUrl, saveBackendUrl } from '@/app/admin/actions';
 
-interface BackendUrlConfigProps {
-    onUrlChange: (url: string) => void;
-}
-
-export default function BackendUrlConfig({ onUrlChange }: BackendUrlConfigProps) {
+export default function BackendUrlConfig() {
   const [url, setUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, startSavingTransition] = useTransition();
   const { toast } = useToast();
 
   useEffect(() => {
-    const savedUrl = localStorage.getItem('backendUrl');
-    if (savedUrl) {
+    const fetchUrl = async () => {
+      setIsLoading(true);
+      const savedUrl = await getBackendUrl();
       setUrl(savedUrl);
-      onUrlChange(savedUrl);
-    }
-  }, [onUrlChange]);
+      setIsLoading(false);
+    };
+    fetchUrl();
+  }, []);
 
   const handleSave = () => {
-    try {
-        // Basic URL validation
-        new URL(url);
-        localStorage.setItem('backendUrl', url);
-        onUrlChange(url);
+    startSavingTransition(async () => {
+      const result = await saveBackendUrl(url);
+      if (result.success) {
         toast({
             title: '保存しました',
-            description: 'バックエンドURLが正常に保存されました。',
+            description: 'バックエンドURLが正常に保存されました。ページをリロードすると、変更が全体に反映されます。',
         });
-    } catch (error) {
+      } else {
         toast({
-            title: '無効なURLです',
-            description: '有効なURLを入力してください (例: http://localhost:8000)',
+            title: '保存失敗',
+            description: result.error || '不明なエラーが発生しました。',
             variant: 'destructive',
         });
-    }
+      }
+    });
   };
 
   return (
@@ -59,13 +59,25 @@ export default function BackendUrlConfig({ onUrlChange }: BackendUrlConfigProps)
         <div>
             <Label htmlFor="backend-url">PythonサーバーURL</Label>
             <div className="flex gap-2 mt-2">
-                <Input
-                id="backend-url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="http://localhost:5000"
-                />
-                <Button onClick={handleSave}>保存</Button>
+                {isLoading ? (
+                    <div className="flex items-center justify-center w-full">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                ) : (
+                    <>
+                    <Input
+                        id="backend-url"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                        placeholder="http://localhost:5000"
+                        disabled={isSaving}
+                    />
+                    <Button onClick={handleSave} disabled={isSaving}>
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSaving ? '保存中...' : '保存'}
+                    </Button>
+                    </>
+                )}
             </div>
         </div>
       </CardContent>

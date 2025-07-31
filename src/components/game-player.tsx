@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Maximize, Minimize } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import FeedbackForm from './feedback-form';
-import { FileText } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
 
 interface GamePlayerProps {
   game: Game;
+  backendUrl: string;
 }
 
 // A simple Markdown-to-HTML converter
@@ -33,17 +35,9 @@ const SimpleMarkdown = ({ text }: { text: string }) => {
 };
 
 
-export default function GamePlayer({ game }: GamePlayerProps) {
+export default function GamePlayer({ game, backendUrl }: GamePlayerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const iframeContainerRef = useRef<HTMLDivElement>(null);
-  const [backendUrl, setBackendUrl] = useState('');
-
-  useEffect(() => {
-    const url = localStorage.getItem('backendUrl');
-    if (url) {
-        setBackendUrl(url);
-    }
-  }, []);
   
   // The backend server will serve the game files directly
   const gameUrl = backendUrl ? `${backendUrl}/games/${game.id}/` : '';
@@ -68,6 +62,22 @@ export default function GamePlayer({ game }: GamePlayerProps) {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+  
+  if (!backendUrl) {
+    return (
+        <div className="w-full space-y-8">
+            <div className="text-center mb-6">
+                <Skeleton className="h-8 w-1/2 mx-auto" />
+                <Skeleton className="h-4 w-3/4 mx-auto mt-2" />
+            </div>
+            <Skeleton className="relative w-full aspect-video rounded-lg" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <Skeleton className="lg:col-span-2 h-48" />
+                <Skeleton className="h-48" />
+            </div>
+        </div>
+    )
+  }
 
   return (
     <div className="w-full">
@@ -117,7 +127,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
           </CardContent>
         </Card>
         
-        <FeedbackForm gameId={game.id} />
+        <FeedbackForm gameId={game.id} backendUrl={backendUrl} />
       </div>
     </div>
   );

@@ -11,24 +11,17 @@ import Link from 'next/link';
 
 interface GameCardProps {
   game: Game;
-  onPlay: (game: Game) => void;
+  backendUrl: string;
 }
 
-export default function GameCard({ game, onPlay }: GameCardProps) {
-  const [backendUrl, setBackendUrl] = useState('');
+export default function GameCard({ game, backendUrl }: GameCardProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    const url = localStorage.getItem('backendUrl');
-    if (url) {
-      setBackendUrl(url);
-    }
-  }, []);
-
-  useEffect(() => {
     if (backendUrl) {
       // Add a timestamp to the image URL to bust the cache when the image is updated.
+      // This is useful when a thumbnail is re-uploaded.
       const src = `${backendUrl}/games/${game.id}/img.png?t=${new Date().getTime()}`;
       setImageSrc(src);
       setImageError(false); // Reset error state when game or backendUrl changes
@@ -40,11 +33,13 @@ export default function GameCard({ game, onPlay }: GameCardProps) {
     setImageError(true);
   };
 
+  const isLoading = !backendUrl || !imageSrc;
+
   return (
     <Card className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1.5 bg-secondary border-secondary-foreground/10">
       <CardHeader className="p-0">
         <div className="aspect-video relative">
-          {!imageSrc ? (
+          {isLoading ? (
             <Skeleton className="h-full w-full" />
           ) : (
             <img

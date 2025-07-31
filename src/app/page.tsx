@@ -1,54 +1,43 @@
 
-'use client';
-
-import { useState, useEffect } from 'react';
 import type { Game } from '@/lib/types';
 import GameCard from '@/components/game-card';
 import { Gamepad2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query, Timestamp } from 'firebase/firestore';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useRouter } from 'next/navigation';
+import { getBackendUrl } from './admin/actions';
 
+// This page will be dynamically rendered, but we can revalidate data
+export const revalidate = 60; // Revalidate every 60 seconds
 
-export default function Home() {
-  const [games, setGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+async function getGames(): Promise<Game[]> {
+  try {
+    const gamesCollection = collection(db, 'games');
+    const q = query(gamesCollection, orderBy('createdAt', 'desc'));
+    const gameSnapshot = await getDocs(q);
+    const gamesList = gameSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const createdAt = data.createdAt as Timestamp | undefined;
+        return {
+            id: doc.id,
+            title: data.title,
+            description: data.description,
+            markdownText: data.markdownText,
+            createdAt: createdAt ? { seconds: createdAt.seconds, nanoseconds: createdAt.nanoseconds } : null,
+        } as Game;
+    });
+    return gamesList;
+  } catch (error) {
+      console.error("Failed to fetch games:", error);
+      return [];
+  }
+}
 
-  useEffect(() => {
-    const fetchGames = async () => {
-      try {
-        const gamesCollection = collection(db, 'games');
-        const q = query(gamesCollection, orderBy('createdAt', 'desc'));
-        const gameSnapshot = await getDocs(q);
-        const gamesList = gameSnapshot.docs.map(doc => {
-            const data = doc.data();
-            // Convert Firestore Timestamp to a plain object for serialization
-            const createdAt = data.createdAt as Timestamp | undefined;
-            return {
-                id: doc.id,
-                title: data.title,
-                description: data.description,
-                markdownText: data.markdownText,
-                createdAt: createdAt ? { seconds: createdAt.seconds, nanoseconds: createdAt.nanoseconds } : null,
-            } as Game;
-        });
-        setGames(gamesList);
-      } catch (error) {
-        console.error("ゲームの読み込みに失敗しました:", error);
-        // You could show a toast message here
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGames();
-  }, []);
-
-  const handlePlay = (game: Game) => {
-    router.push(`/games/${game.id}`);
-  };
+export default async function Home() {
+  // Fetch games and backendUrl in parallel
+  const [games, backendUrl] = await Promise.all([
+    getGames(),
+    getBackendUrl()
+  ]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -61,30 +50,18 @@ export default function Home() {
               文化祭へようこそ！下のリストから気になるゲームを選んで遊んでみよう。
             </p>
           </div>
-          {loading ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex flex-col space-y-3">
-                    <Skeleton className="h-[228px] w-full rounded-xl" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-[250px]" />
-                      <Skeleton className="h-4 w-[200px]" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-          ) : (
+          
+          {games.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {games.map((game) => (
-                <GameCard key={game.id} game={game} onPlay={handlePlay} />
+                <GameCard key={game.id} game={game} backendUrl={backendUrl} />
               ))}
-              {games.length === 0 && !loading && (
-                <div className="col-span-full text-center py-20 rounded-xl bg-card border border-dashed">
-                  <Gamepad2 className="mx-auto h-16 w-16 text-muted-foreground" />
-                  <h3 className="mt-4 text-xl font-semibold">まだゲームがありません</h3>
-                  <p className="mt-2 text-muted-foreground">新しいゲームが追加されるのをお待ちください！</p>
-                </div>
-              )}
+            </div>
+          ) : (
+            <div className="col-span-full text-center py-20 rounded-xl bg-card border border-dashed">
+                <Gamepad2 className="mx-auto h-16 w-16 text-muted-foreground" />
+                <h3 className="mt-4 text-xl font-semibold">まだゲームがありません</h3>
+                <p className="mt-2 text-muted-foreground">新しいゲームが追加されるのをお待ちください！</p>
             </div>
           )}
         </>

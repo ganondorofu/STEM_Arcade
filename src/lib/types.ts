@@ -1,3 +1,4 @@
+
 export interface Game {
   id: string;
   title: string;
@@ -14,4 +15,8 @@ export interface Feedback {
   gameId: string;
   comment: string;
   timestamp: Date;
+}
+
+export interface Config {
+  backendUrl?: string;
 }

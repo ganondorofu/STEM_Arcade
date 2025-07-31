@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
@@ -13,21 +13,15 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 interface FeedbackFormProps {
   gameId: string;
+  backendUrl: string;
 }
 
-export default function FeedbackForm({ gameId }: FeedbackFormProps) {
+export default function FeedbackForm({ gameId, backendUrl }: FeedbackFormProps) {
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [backendUrl, setBackendUrl] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
-    const url = localStorage.getItem('backendUrl');
-    if (url) {
-        setBackendUrl(url);
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,9 +111,9 @@ export default function FeedbackForm({ gameId }: FeedbackFormProps) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={4}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !backendUrl}
           />
-          <Button type="submit" className="w-full" variant="secondary" disabled={isSubmitting}>
+          <Button type="submit" className="w-full" variant="secondary" disabled={isSubmitting || !backendUrl}>
             {isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
