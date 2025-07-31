@@ -2,13 +2,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Gamepad2, Shield, LogIn, LogOut } from 'lucide-react';
-import { Button } from '../ui/button';
-import { useAuth } from '@/context/auth-context';
+import { Gamepad2 } from 'lucide-react';
 
 export default function Header() {
-  const { isAuthenticated, logout } = useAuth();
-
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -18,19 +14,7 @@ export default function Header() {
         </Link>
         <div className="flex-1" />
         <div className="flex items-center gap-4">
-          {isAuthenticated ? (
-             <Button variant="outline" size="sm" onClick={logout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                ログアウト
-            </Button>
-          ) : (
-             <Button variant="outline" size="sm" asChild>
-                <Link href="/login">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    管理者ログイン
-                </Link>
-            </Button>
-          )}
+          {/* Admin login button removed as per request */}
         </div>
       </div>
     </header>
