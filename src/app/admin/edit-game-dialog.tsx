@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useState, useRef, useEffect, forwardRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { updateGame, reuploadFiles } from '@/app/admin/actions';
 
@@ -154,9 +154,9 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
             {/* Text Update Form */}
             <Form {...textForm}>
             <form onSubmit={textForm.handleSubmit(onTextSubmit)} className="space-y-4 py-4 border-b">
-                <FormField control={textForm.control} name="title" render={({ field }) => ( <FormItem> <FormLabel>ゲームタイトル</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
-                <FormField control={textForm.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>短い説明</FormLabel> <FormControl><Textarea rows={2} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
-                <FormField control={textForm.control} name="markdownText" render={({ field }) => ( <FormItem> <FormLabel>ゲーム詳細 (Markdown)</FormLabel> <FormControl><Textarea rows={8} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+                <FormField control={textForm.control} name="title" render={({ field }) => ( <FormItem> <FormLabel>ゲームタイトル</FormLabel> <FormControl><Input {...field} value={field.value ?? ''} /></FormControl> <FormMessage /> </FormItem> )} />
+                <FormField control={textForm.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>短い説明</FormLabel> <FormControl><Textarea rows={2} {...field} value={field.value ?? ''} /></FormControl> <FormMessage /> </FormItem> )} />
+                <FormField control={textForm.control} name="markdownText" render={({ field }) => ( <FormItem> <FormLabel>ゲーム詳細 (Markdown)</FormLabel> <FormControl><Textarea rows={8} {...field} value={field.value ?? ''} /></FormControl> <FormMessage /> </FormItem> )} />
                 
                 <div className='flex justify-end'>
                     <Button type="submit" disabled={isSubmittingText}>
