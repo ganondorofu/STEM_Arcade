@@ -26,11 +26,6 @@ export default function GameCard({ game, onPlay }: GameCardProps) {
             data-ai-hint="gameplay screenshot"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             unoptimized // Use unoptimized as the image is served from a different origin after rewrite.
-            onError={(e) => {
-              // Replace with a local, non-optimized placeholder to prevent loops
-              e.currentTarget.src = '/placeholder.png';
-              e.currentTarget.srcset = '';
-            }}
           />
         </div>
       </CardHeader>
