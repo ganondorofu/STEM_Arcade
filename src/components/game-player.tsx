@@ -34,7 +34,8 @@ export default function GamePlayer({ game, onClose }: GamePlayerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const iframeContainerRef = useRef<HTMLDivElement>(null);
   
-  const gameUrl = `/games/${game.id}/index.html`;
+  // The rewrite in next.config.ts will handle proxying this to the backend
+  const gameUrl = `/games/${game.id}/`;
 
   const toggleFullscreen = () => {
     if (!iframeContainerRef.current) return;

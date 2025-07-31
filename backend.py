@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 import zipfile
@@ -6,14 +6,17 @@ import shutil
 
 app = Flask(__name__)
 
-# アップロード先をNext.jsが配信できる `public` ディレクトリに変更
+# アップロード先をPythonサーバーのローカルディレクトリに設定
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-# Next.jsのpublicディレクトリを基準にする
-PUBLIC_DIR = os.path.join(BASE_DIR, 'public')
-GAMES_DIR = os.path.join(PUBLIC_DIR, 'games')
+GAMES_DIR = os.path.join(BASE_DIR, 'games')
 
 # フォルダ作成
 os.makedirs(GAMES_DIR, exist_ok=True)
+
+@app.route('/games/<path:path>')
+def serve_game_files(path):
+    """/games/ ディレクトリ以下の静的ファイルを配信するためのエンドポイント"""
+    return send_from_directory(GAMES_DIR, path)
 
 @app.route('/upload', methods=['POST'])
 def upload_game():
