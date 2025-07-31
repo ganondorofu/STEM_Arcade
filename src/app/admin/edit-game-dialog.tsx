@@ -155,7 +155,8 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
       // Trigger a re-render of the game card to show the new thumbnail
       // A slight delay might be needed for the server to process the image
       setTimeout(() => {
-        onGameUpdate({ ...game, id: game.id + '_updated' }); // Force re-render by changing a prop
+        // Force a re-fetch or state update in the parent to reflect the new thumbnail
+        onGameUpdate({ ...game, id: `${game.id}_${new Date().getTime()}` }); 
       }, 500);
 
 

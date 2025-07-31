@@ -35,7 +35,7 @@ import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '../ui
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy, Timestamp, doc, deleteDoc, getDocsFromServer, collectionGroup } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, Timestamp, doc, deleteDoc } from 'firebase/firestore';
 
 
 export default function GamesTable() {
@@ -154,9 +154,17 @@ export default function GamesTable() {
       // 2. Delete the document from Firestore
       const gameRef = doc(db, "games", gameToDelete.id);
       await deleteDoc(gameRef);
+      
+      // Delete feedbacks for the game
+      const feedbackQuery = query(collection(db, 'feedbacks'), where('gameId', '==', gameToDelete.id));
+      const feedbackSnapshot = await getDocs(feedbackQuery);
+      const deletePromises = feedbackSnapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+
 
       // 3. Update local state
       setGames(games.filter(g => g.id !== gameToDelete.id));
+      setFeedbacks(feedbacks.filter(f => f.gameId !== gameToDelete.id));
 
       toast({
         title: "ゲームを削除しました",
@@ -175,16 +183,12 @@ export default function GamesTable() {
   }
   
   const handleGameUpdate = (updatedGame: Game) => {
-    // This is a bit of a hack to force a re-render of the card
-    // The id is temporarily changed to ensure React sees a new element
-    if (updatedGame.id.endsWith('_updated')) {
-        const originalId = updatedGame.id.replace('_updated', '');
-        setGames(games.map(g => g.id === originalId ? { ...updatedGame, id: originalId } : g));
-        // We might need to refetch to be sure we get the latest
-        fetchGamesAndFeedback();
-
+    // If the ID has been modified to bust cache, it means we need to refetch
+    // to get the new image URL properly.
+    if (game.id !== updatedGame.id) {
+       fetchGamesAndFeedback();
     } else {
-         setGames(games.map(g => g.id === updatedGame.id ? updatedGame : g));
+       setGames(games.map(g => g.id === updatedGame.id ? updatedGame : g));
     }
   }
   
@@ -198,7 +202,7 @@ export default function GamesTable() {
     <>
       <Card>
         <CardHeader>
-            <CardTitle>ゲーム管理</CardTitle>
+            <CardTitle>ゲームリスト</CardTitle>
             <CardDescription>
                 アーケードに現在登録されている全ゲームのリストです。
             </CardDescription>
@@ -209,55 +213,59 @@ export default function GamesTable() {
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
             ) : (
+                <div className="border rounded-md">
                 <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>タイトル</TableHead>
-                    <TableHead className="hidden md:table-cell">説明</TableHead>
-                    <TableHead className="hidden lg:table-cell">追加日</TableHead>
-                    <TableHead className="text-right">操作</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {games.map((game) => (
-                    <TableRow key={game.id}>
-                        <TableCell className="font-medium">{game.title}</TableCell>
-                        <TableCell className="hidden md:table-cell max-w-sm truncate">{game.description}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{formatDate(game.createdAt)}</TableCell>
-                        <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(game)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                編集
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleViewFeedback(game)}>
-                                <MessageSquare className="mr-2 h-4 w-4" />
-                                フィードバックを見る
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(game)}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                削除
-                            </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                    {games.length === 0 && (
+                    <TableHeader>
                         <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center">
-                                ゲームが見つかりません。
-                            </TableCell>
+                        <TableHead>タイトル</TableHead>
+                        <TableHead className="hidden md:table-cell">説明</TableHead>
+                        <TableHead className="hidden lg:table-cell">追加日</TableHead>
+                        <TableHead className="text-right">操作</TableHead>
                         </TableRow>
-                    )}
-                </TableBody>
+                    </TableHeader>
+                    <TableBody>
+                        {games.length > 0 ? (
+                            games.map((game) => (
+                            <TableRow key={game.id}>
+                                <TableCell className="font-medium">{game.title}</TableCell>
+                                <TableCell className="hidden md:table-cell max-w-sm truncate">{game.description}</TableCell>
+                                <TableCell className="hidden lg:table-cell">{formatDate(game.createdAt)}</TableCell>
+                                <TableCell className="text-right">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        <span className="sr-only">メニューを開く</span>
+                                    </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEdit(game)}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        編集
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleViewFeedback(game)}>
+                                        <MessageSquare className="mr-2 h-4 w-4" />
+                                        フィードバックを見る
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(game)}>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        削除
+                                    </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">
+                                    まだゲームが登録されていません。
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
                 </Table>
+                </div>
             )}
         </CardContent>
       </Card>
@@ -303,7 +311,7 @@ export default function GamesTable() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                 <AlertDialogCancel onClick={() => setGameToDelete(null)}>キャンセル</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmDelete}>削除を続行</AlertDialogAction>
+                <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">削除を続行</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

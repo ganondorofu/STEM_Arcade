@@ -12,7 +12,7 @@ export default function AdminPage() {
       <div className="mb-8 space-y-4">
         <div className="flex justify-between items-center">
             <div>
-                 <h1 className="text-4xl font-bold text-primary">管理者パネル</h1>
+                 <h1 className="text-4xl font-bold text-primary">ゲーム管理パネル</h1>
                 <p className="mt-2 text-muted-foreground">
                 ゲームの管理、フィードバックの確認などを行えます。
                 </p>
