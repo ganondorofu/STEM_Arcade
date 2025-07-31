@@ -83,14 +83,21 @@ def reupload_game():
         return jsonify({"error": "id は必須です"}), 400
 
     target_dir = os.path.join(GAMES_DIR, game_id)
-    
+    # 既存のディレクトリがない場合は新規作成する
+    os.makedirs(target_dir, exist_ok=True)
+
     # zip再展開
     if zip_file and zip_file.filename != '':
         try:
-            # 安全のため、再アップロードの前に一度ディレクトリを完全に削除し、再作成する
-            if os.path.isdir(target_dir):
-                shutil.rmtree(target_dir)
-            os.makedirs(target_dir, exist_ok=True)
+            # 再アップロードの前に、既存のゲームファイルをクリーンアップする
+            # ただし、img.pngは消さないようにする
+            for item in os.listdir(target_dir):
+                if item != 'img.png':
+                    item_path = os.path.join(target_dir, item)
+                    if os.path.isdir(item_path):
+                        shutil.rmtree(item_path)
+                    else:
+                        os.remove(item_path)
 
             zip_path = os.path.join(target_dir, 'upload.zip')
             zip_file.save(zip_path)
@@ -105,8 +112,6 @@ def reupload_game():
     # 画像再保存 (ディレクトリが存在しない場合も考慮)
     if image_file and image_file.filename != '':
         try:
-            # ディレクトリが存在しない可能性も考慮し、なければ作成する
-            os.makedirs(target_dir, exist_ok=True)
             image_path = os.path.join(target_dir, 'img.png')
             image_file.save(image_path)
         except Exception as e:
@@ -156,5 +161,3 @@ if __name__ == '__main__':
     from flask_cors import CORS
     CORS(app) 
     app.run(host='0.0.0.0', port=5000)
-
-    
