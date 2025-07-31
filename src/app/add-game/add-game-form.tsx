@@ -149,7 +149,7 @@ export default function AddGameForm() {
                         <FormField
                             control={form.control}
                             name="zipFile"
-                            render={({ field: { onChange, ...fieldProps }}) => (
+                            render={({ field: { onChange, value, ...fieldProps }}) => (
                                 <FormItem>
                                     <FormLabel>ゲームのZIPファイル（任意）</FormLabel>
                                     <FormControl>
@@ -163,7 +163,7 @@ export default function AddGameForm() {
                         <FormField
                             control={form.control}
                             name="thumbnail"
-                            render={({ field: { onChange, ...fieldProps }}) => (
+                            render={({ field: { onChange, value, ...fieldProps }}) => (
                                 <FormItem>
                                     <FormLabel>サムネイル画像（任意）</FormLabel>
                                     <FormControl>
