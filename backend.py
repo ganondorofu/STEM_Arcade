@@ -106,7 +106,8 @@ def reupload_game():
                 zip_ref.extractall(target_dir)
             os.remove(zip_path)
         except zipfile.BadZipFile:
-             return jsonify({"error": "提供されたファイルは有効なZIPファイルではありません。"}), 400
+             # フロントから空のBlobが送られてきた場合などは無視する
+            pass
         except Exception as e:
             return jsonify({"error": f"ZIPファイルの再アップロード処理中にエラーが発生しました: {str(e)}"}), 500
 
