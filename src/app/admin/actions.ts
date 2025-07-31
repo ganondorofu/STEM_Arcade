@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from "@/lib/firebase";
@@ -76,4 +77,8 @@ export async function reuploadFiles(formData: FormData) {
     // Revalidate paths to show potential thumbnail changes
     revalidatePath('/');
     revalidatePath('/admin');
+    // Also revalidate the specific game page if you have one
+    if (gameId) {
+        revalidatePath(`/games/${gameId}`);
+    }
 }
