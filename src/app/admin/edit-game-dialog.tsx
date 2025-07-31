@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -144,8 +145,8 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <p className="text-sm font-medium">ファイルの再アップロード（任意）</p>
               <FormDescription>現在のゲームビルドやサムネイルを置き換える場合に利用します。</FormDescription>
               
-              <FormField control={form.control} name="zipFile" render={({ field: { onChange, value, ...fieldProps }}) => ( <FormItem> <FormLabel>ゲームZIPファイル</FormLabel> <FormControl><Input type="file" accept=".zip" {...fieldProps} ref={zipInputRef} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
-              <FormField control={form.control} name="thumbnail" render={({ field: { onChange, value, ...fieldProps }}) => ( <FormItem> <FormLabel>サムネイル画像</FormLabel> <FormControl><Input type="file" accept="image/png, image/jpeg" ref={thumbInputRef} {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
+              <FormField control={form.control} name="zipFile" render={({ field: { onChange, ...fieldProps }}) => ( <FormItem> <FormLabel>ゲームZIPファイル</FormLabel> <FormControl><Input type="file" accept=".zip" {...fieldProps} ref={zipInputRef} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
+              <FormField control={form.control} name="thumbnail" render={({ field: { onChange, ...fieldProps }}) => ( <FormItem> <FormLabel>サムネイル画像</FormLabel> <FormControl><Input type="file" accept="image/png, image/jpeg" ref={thumbInputRef} {...fieldProps} onChange={(e) => onChange(e.target.files?.[0])} /></FormControl> <FormMessage /> </FormItem> )} />
               
               <DialogFooter>
                   <Button onClick={handleReupload} disabled={!hasFilesForReupload || isReuploading}>
