@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import type { Game, Feedback } from '@/lib/types';
+import { useEffect, useState, useCallback } from 'react';
+import type { Game } from '@/lib/types';
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Trash2, Edit, MessageSquare } from 'lucide-react';
+import { MoreHorizontal, Trash2, Edit, MessageSquare, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,20 +31,17 @@ import {
 } from "@/components/ui/alert-dialog"
 import EditGameDialog from '@/app/admin/edit-game-dialog';
 import ViewFeedbackDialog from './view-feedback-dialog';
-import { Card, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { deleteGame } from '@/app/admin/actions';
+import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy, Timestamp, doc, deleteDoc, getDocsFromServer, collectionGroup } from 'firebase/firestore';
 
 
-interface GamesTableProps {
-  initialGames: Game[];
-  initialFeedbacks: Feedback[];
-}
-
-export default function GamesTable({ initialGames, initialFeedbacks }: GamesTableProps) {
-  const [games, setGames] = useState<Game[]>(initialGames);
-  const [feedbacks] = useState<Feedback[]>(initialFeedbacks);
+export default function GamesTable() {
+  const [games, setGames] = useState<Game[]>([]);
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
@@ -57,12 +54,62 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
   const [backendUrl, setBackendUrl] = useState('');
   const { toast } = useToast();
 
+  const fetchGamesAndFeedback = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Fetch games
+      const gamesCollection = collection(db, 'games');
+      const q = query(gamesCollection, orderBy('createdAt', 'desc'));
+      const gameSnapshot = await getDocs(q);
+      const gamesList = gameSnapshot.docs.map(doc => {
+          const data = doc.data();
+          const createdAt = data.createdAt as Timestamp;
+          return {
+              id: doc.id,
+              title: data.title,
+              description: data.description,
+              markdownText: data.markdownText,
+              createdAt: createdAt ? { seconds: createdAt.seconds, nanoseconds: createdAt.nanoseconds } : null,
+          } as Game;
+      });
+      setGames(gamesList);
+
+      // Fetch feedbacks
+      const feedbackCollection = collection(db, 'feedbacks');
+      const feedbackQuery = query(feedbackCollection, orderBy('createdAt', 'desc'));
+      const feedbackSnapshot = await getDocs(feedbackQuery);
+      const feedbackList = feedbackSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const createdAt = data.createdAt as Timestamp;
+         return {
+          id: doc.id,
+          gameId: data.gameId,
+          comment: data.comment,
+          timestamp: createdAt.toDate(),
+        }
+      });
+      setFeedbacks(feedbackList);
+
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+      toast({
+        title: 'データの読み込みに失敗',
+        description: 'Firestoreからのデータ取得中にエラーが発生しました。',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+
    useEffect(() => {
     const url = localStorage.getItem('backendUrl');
     if (url) {
       setBackendUrl(url);
     }
-  }, []);
+    fetchGamesAndFeedback();
+  }, [fetchGamesAndFeedback]);
 
   const handleEdit = (game: Game) => {
     if (!backendUrl) {
@@ -90,8 +137,27 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
   const confirmDelete = async () => {
     if (!gameToDelete || !backendUrl) return;
     try {
-      await deleteGame(gameToDelete.id, backendUrl);
+      // 1. Delete files from the Python server
+      const formData = new FormData();
+      formData.append('id', gameToDelete.id);
+      const response = await fetch(`${backendUrl}/delete`, { 
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error("バックエンドでのファイル削除に失敗しました:", errorBody);
+        // Do not throw an error here, allow Firestore deletion to proceed
+      }
+
+      // 2. Delete the document from Firestore
+      const gameRef = doc(db, "games", gameToDelete.id);
+      await deleteDoc(gameRef);
+
+      // 3. Update local state
       setGames(games.filter(g => g.id !== gameToDelete.id));
+
       toast({
         title: "ゲームを削除しました",
         description: `「${gameToDelete.title}」をアーケードから削除しました。`
@@ -108,8 +174,18 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
     }
   }
   
-  const handleUpdateGame = (updatedGame: Game) => {
-      setGames(games.map(g => g.id === updatedGame.id ? updatedGame : g));
+  const handleGameUpdate = (updatedGame: Game) => {
+    // This is a bit of a hack to force a re-render of the card
+    // The id is temporarily changed to ensure React sees a new element
+    if (updatedGame.id.endsWith('_updated')) {
+        const originalId = updatedGame.id.replace('_updated', '');
+        setGames(games.map(g => g.id === originalId ? { ...updatedGame, id: originalId } : g));
+        // We might need to refetch to be sure we get the latest
+        fetchGamesAndFeedback();
+
+    } else {
+         setGames(games.map(g => g.id === updatedGame.id ? updatedGame : g));
+    }
   }
   
   const formatDate = (date: any) => {
@@ -127,55 +203,63 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
                 アーケードに現在登録されている全ゲームのリストです。
             </CardDescription>
         </CardHeader>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>タイトル</TableHead>
-              <TableHead className="hidden md:table-cell">説明</TableHead>
-              <TableHead className="hidden lg:table-cell">追加日</TableHead>
-              <TableHead className="text-right">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {games.map((game) => (
-              <TableRow key={game.id}>
-                <TableCell className="font-medium">{game.title}</TableCell>
-                <TableCell className="hidden md:table-cell max-w-sm truncate">{game.description}</TableCell>
-                <TableCell className="hidden lg:table-cell">{formatDate(game.createdAt)}</TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(game)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        編集
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleViewFeedback(game)}>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        フィードバックを見る
-                      </DropdownMenuItem>
-                       <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(game)}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        削除
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-             {games.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
-                        ゲームが見つかりません。
-                    </TableCell>
-                </TableRow>
+        <CardContent>
+            {loading ? (
+                <div className="flex items-center justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            ) : (
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>タイトル</TableHead>
+                    <TableHead className="hidden md:table-cell">説明</TableHead>
+                    <TableHead className="hidden lg:table-cell">追加日</TableHead>
+                    <TableHead className="text-right">操作</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {games.map((game) => (
+                    <TableRow key={game.id}>
+                        <TableCell className="font-medium">{game.title}</TableCell>
+                        <TableCell className="hidden md:table-cell max-w-sm truncate">{game.description}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{formatDate(game.createdAt)}</TableCell>
+                        <TableCell className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(game)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                編集
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewFeedback(game)}>
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                フィードバックを見る
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(game)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                削除
+                            </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                    {games.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={4} className="h-24 text-center">
+                                ゲームが見つかりません。
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+                </Table>
             )}
-          </TableBody>
-        </Table>
+        </CardContent>
       </Card>
       
       {selectedGame && (
@@ -189,7 +273,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
                 }
             }}
             game={selectedGame}
-            onGameUpdate={handleUpdateGame}
+            onGameUpdate={handleGameUpdate}
             backendUrl={backendUrl}
         />
       )}

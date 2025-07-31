@@ -1,12 +1,20 @@
+
 'use client';
 
-import type { Game, Feedback } from '@/lib/types';
+import type { Game } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 import { Card, CardContent } from '../ui/card';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
+// Updated Feedback type to use Date object
+interface Feedback {
+  id: string;
+  gameId: string;
+  comment: string;
+  timestamp: Date;
+}
 
 interface ViewFeedbackDialogProps {
   isOpen: boolean;
@@ -33,7 +41,7 @@ export default function ViewFeedbackDialog({ isOpen, setIsOpen, game, feedbacks 
                   <CardContent className="p-4">
                     <p className="text-sm">{feedback.comment}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {formatDistanceToNow(new Date(feedback.timestamp), { addSuffix: true, locale: ja })}
+                      {formatDistanceToNow(feedback.timestamp, { addSuffix: true, locale: ja })}
                     </p>
                   </CardContent>
                 </Card>

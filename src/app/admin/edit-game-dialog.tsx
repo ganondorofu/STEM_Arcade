@@ -12,7 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { updateGame } from '@/app/admin/actions';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+
 
 interface EditGameDialogProps {
   isOpen: boolean;
@@ -83,7 +85,13 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
   const onTextSubmit: SubmitHandler<TextFormValues> = async (values) => {
     setIsSubmittingText(true);
     try {
-      await updateGame(game.id, values.title, values.description || '', values.markdownText || '');
+      const gameRef = doc(db, "games", game.id);
+      await updateDoc(gameRef, {
+        title: values.title,
+        description: values.description || '',
+        markdownText: values.markdownText || '',
+      });
+
       const updatedGame: Game = {
         ...game,
         title: values.title,
@@ -145,7 +153,11 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
       if (thumbInputRef.current) thumbInputRef.current.value = '';
 
       // Trigger a re-render of the game card to show the new thumbnail
-      onGameUpdate({ ...game }); 
+      // A slight delay might be needed for the server to process the image
+      setTimeout(() => {
+        onGameUpdate({ ...game, id: game.id + '_updated' }); // Force re-render by changing a prop
+      }, 500);
+
 
     } catch (error) {
       toast({ title: "再アップロード失敗", description: error instanceof Error ? error.message : "サーバーエラー", variant: "destructive" });

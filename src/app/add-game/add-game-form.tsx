@@ -19,9 +19,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { UploadCloud } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast"
-import { addGame } from './actions';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { db } from '@/lib/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import type { Game } from '@/lib/types';
+
 
 const formSchema = z.object({
   title: z.string().min(1, {
@@ -68,7 +71,10 @@ export default function AddGameForm() {
             return;
         }
 
+        const gameId = `game_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
         const formData = new FormData();
+        formData.append('id', gameId);
         formData.append('title', values.title);
         formData.append('description', values.description || '');
         formData.append('markdownText', values.markdownText || '');
@@ -76,15 +82,34 @@ export default function AddGameForm() {
         if (values.zipFile) {
             formData.append('zip', values.zipFile);
         }
-
         if (values.thumbnail) {
             formData.append('img', values.thumbnail);
         }
         
-        formData.append('backendUrl', backendUrl);
-
         try {
-            await addGame(formData);
+             // 1. Upload files to Python server (if any)
+            const response = await fetch(`${backendUrl}/upload`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+                console.error("Upload failed:", errorBody);
+                throw new Error(`ファイルアップロードに失敗しました: ${response.statusText}. ${errorBody}`);
+            }
+
+            // 2. Add game data to Firestore from the client
+            const newGameData: Omit<Game, 'id'> = {
+                title: values.title,
+                description: values.description || '',
+                markdownText: values.markdownText || '',
+                createdAt: serverTimestamp(),
+            };
+
+            await setDoc(doc(db, "games", gameId), newGameData);
+
+
             toast({
                 title: "ゲームが追加されました！",
                 description: `「${values.title}」がアーケードに登場しました。`,
