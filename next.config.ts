@@ -18,15 +18,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-    return [
-      {
-        source: '/games/:path*',
-        destination: `${backendUrl}/games/:path*`, 
-      },
-    ]
-  },
 };
 
 export default nextConfig;
