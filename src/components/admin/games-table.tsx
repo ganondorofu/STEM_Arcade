@@ -35,10 +35,16 @@ import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '../ui
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy, Timestamp, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, Timestamp, doc, deleteDoc, where } from 'firebase/firestore';
 
 
-export default function GamesTable() {
+interface GamesTableProps {
+    backendUrl: string;
+    onGameUpdate: () => void;
+}
+
+
+export default function GamesTable({ backendUrl, onGameUpdate }: GamesTableProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +57,6 @@ export default function GamesTable() {
   const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
   const [gameForFeedback, setGameForFeedback] = useState<Game | null>(null);
 
-  const [backendUrl, setBackendUrl] = useState('');
   const { toast } = useToast();
 
   const fetchGamesAndFeedback = useCallback(async () => {
@@ -104,10 +109,6 @@ export default function GamesTable() {
 
 
    useEffect(() => {
-    const url = localStorage.getItem('backendUrl');
-    if (url) {
-      setBackendUrl(url);
-    }
     fetchGamesAndFeedback();
   }, [fetchGamesAndFeedback]);
 
@@ -163,8 +164,7 @@ export default function GamesTable() {
 
 
       // 3. Update local state
-      setGames(games.filter(g => g.id !== gameToDelete.id));
-      setFeedbacks(feedbacks.filter(f => f.gameId !== gameToDelete.id));
+      onGameUpdate();
 
       toast({
         title: "ゲームを削除しました",
@@ -183,13 +183,7 @@ export default function GamesTable() {
   }
   
   const handleGameUpdate = (updatedGame: Game) => {
-    // If the ID has been modified to bust cache, it means we need to refetch
-    // to get the new image URL properly.
-    if (game.id !== updatedGame.id) {
-       fetchGamesAndFeedback();
-    } else {
-       setGames(games.map(g => g.id === updatedGame.id ? updatedGame : g));
-    }
+     onGameUpdate();
   }
   
   const formatDate = (date: any) => {

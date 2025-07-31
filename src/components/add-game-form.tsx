@@ -16,10 +16,9 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { UploadCloud } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { UploadCloud, PlusCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast"
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -36,17 +35,13 @@ const formSchema = z.object({
   thumbnail: z.instanceof(File).optional(),
 });
 
-export default function AddGameForm() {
-    const { toast } = useToast();
-    const router = useRouter();
-    const [backendUrl, setBackendUrl] = useState('');
+interface AddGameFormProps {
+    onGameAdded: () => void;
+    backendUrl: string;
+}
 
-    useEffect(() => {
-        const url = localStorage.getItem('backendUrl');
-        if (url) {
-            setBackendUrl(url);
-        }
-    }, []);
+export default function AddGameForm({ onGameAdded, backendUrl }: AddGameFormProps) {
+    const { toast } = useToast();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -65,7 +60,7 @@ export default function AddGameForm() {
         if (!backendUrl) {
             toast({
                 title: "バックエンドURL未設定",
-                description: "管理者パネルでバックエンドURLを設定してください。",
+                description: "ファイル操作の前に、バックエンドURLを設定してください。",
                 variant: "destructive",
             });
             return;
@@ -114,7 +109,8 @@ export default function AddGameForm() {
                 title: "ゲームが追加されました！",
                 description: `「${values.title}」がアーケードに登場しました。`,
             });
-            router.push('/admin'); 
+            form.reset(); // Reset form after successful submission
+            onGameAdded(); // Callback to refresh the game list
         } catch (error) {
              toast({
                 title: "アップロード失敗",
@@ -126,6 +122,15 @@ export default function AddGameForm() {
 
     return (
         <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center">
+                    <PlusCircle className="mr-2" />
+                    新しいゲームを追加
+                </CardTitle>
+                <CardDescription>
+                    下のフォームを入力して、あなたのWebGLゲームをアーケードに追加しましょう。
+                </CardDescription>
+            </CardHeader>
             <CardContent className="p-6">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

@@ -1,5 +1,5 @@
 
-export default function AddGameLayout({
+export default function ManageLayout({
   children,
 }: {
   children: React.ReactNode;

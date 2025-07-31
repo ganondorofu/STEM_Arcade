@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,7 +9,11 @@ import { Label } from '../ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Server } from 'lucide-react';
 
-export default function BackendUrlConfig() {
+interface BackendUrlConfigProps {
+    onUrlChange: (url: string) => void;
+}
+
+export default function BackendUrlConfig({ onUrlChange }: BackendUrlConfigProps) {
   const [url, setUrl] = useState('');
   const { toast } = useToast();
 
@@ -16,14 +21,16 @@ export default function BackendUrlConfig() {
     const savedUrl = localStorage.getItem('backendUrl');
     if (savedUrl) {
       setUrl(savedUrl);
+      onUrlChange(savedUrl);
     }
-  }, []);
+  }, [onUrlChange]);
 
   const handleSave = () => {
     try {
         // Basic URL validation
         new URL(url);
         localStorage.setItem('backendUrl', url);
+        onUrlChange(url);
         toast({
             title: '保存しました',
             description: 'バックエンドURLが正常に保存されました。',
@@ -56,7 +63,7 @@ export default function BackendUrlConfig() {
                 id="backend-url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="http://localhost:8000"
+                placeholder="http://localhost:5000"
                 />
                 <Button onClick={handleSave}>保存</Button>
             </div>
