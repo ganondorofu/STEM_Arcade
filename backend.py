@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response
 from werkzeug.utils import secure_filename
 import os
 import zipfile
 import shutil
+import glob
 
 app = Flask(__name__)
 
@@ -17,7 +18,68 @@ os.makedirs(GAMES_DIR, exist_ok=True)
 @app.route('/games/<path:path>')
 def serve_game_files(path):
     """/games/ ディレクトリ以下の静的ファイルを配信するためのエンドポイント"""
-    # 配信元を public/games に変更
+    # Check if the path is a directory and serve a dynamic index.html if needed
+    game_dir = os.path.join(GAMES_DIR, os.path.dirname(path))
+    
+    # We are trying to access a directory, likely for the iframe src
+    if path.endswith('/'):
+        index_path = os.path.join(GAMES_DIR, path, 'index.html')
+        game_id_dir = os.path.join(GAMES_DIR, path)
+
+        if not os.path.exists(index_path):
+            # Find the loader script to determine the build name
+            loader_scripts = glob.glob(os.path.join(game_id_dir, '*.loader.js'))
+            if loader_scripts:
+                build_name = os.path.basename(loader_scripts[0]).replace('.loader.js', '')
+                
+                # Dynamically generate the index.html content
+                html_content = f"""
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | {build_name}</title>
+    <style>
+      body {{ padding: 0; margin: 0; overflow: hidden; }}
+      #unity-container {{
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+      }}
+      #unity-canvas {{
+        width: 100%;
+        height: 100%;
+        background: #231F20;
+      }}
+    </style>
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" width=auto height=auto></canvas>
+    </div>
+    <script src="{build_name}.loader.js"></script>
+    <script>
+      createUnityInstance(document.querySelector("#unity-canvas"), {{
+        dataUrl: "{build_name}.data.gz",
+        frameworkUrl: "{build_name}.framework.js.gz",
+        codeUrl: "{build_name}.wasm.gz",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "{build_name}",
+        productVersion: "1.0",
+      }});
+    </script>
+  </body>
+</html>
+"""
+                return Response(html_content, mimetype='text/html')
+
+    # Serve static files as before
     return send_from_directory(PUBLIC_DIR, f'games/{path}')
 
 @app.route('/upload', methods=['POST'])
