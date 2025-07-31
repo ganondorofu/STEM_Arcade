@@ -10,7 +10,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { updateGame, reuploadFiles } from '@/app/admin/actions';
 
@@ -44,16 +44,6 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
       markdownText: game.markdownText || '',
     },
   });
-  
-  useEffect(() => {
-    if (game) {
-      form.reset({
-        title: game.title || '',
-        description: game.description || '',
-        markdownText: game.markdownText || ''
-      });
-    }
-  }, [game, form]);
 
   const handleReupload = async () => {
     if (!backendUrl) {
@@ -148,7 +138,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <FormField
                 control={form.control}
                 name="zipFile"
-                render={({ field: { onChange, onBlur, name } }) => (
+                render={({ field: { onChange, onBlur, name, ref } }) => (
                   <FormItem>
                     <FormLabel>ゲームZIPファイル</FormLabel>
                     <FormControl>
@@ -168,7 +158,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <FormField
                 control={form.control}
                 name="thumbnail"
-                render={({ field: { onChange, onBlur, name } }) => (
+                render={({ field: { onChange, onBlur, name, ref } }) => (
                   <FormItem>
                     <FormLabel>サムネイル画像</FormLabel>
                     <FormControl>

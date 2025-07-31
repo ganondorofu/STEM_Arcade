@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -177,6 +178,7 @@ export default function GamesTable({ initialGames, initialFeedbacks }: GamesTabl
       {selectedGame && (
         <>
             <EditGameDialog 
+                key={selectedGame.id}
                 isOpen={isEditDialogOpen}
                 setIsOpen={setIsEditDialogOpen}
                 game={selectedGame}
