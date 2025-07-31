@@ -1,19 +1,22 @@
+
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
 import type { Game } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Maximize, Minimize, XCircle, FileText } from 'lucide-react';
+import { Maximize, Minimize } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import FeedbackForm from './feedback-form';
+import { FileText } from 'lucide-react';
 
 interface GamePlayerProps {
   game: Game;
-  onClose: () => void;
 }
 
 // A simple Markdown-to-HTML converter
 const SimpleMarkdown = ({ text }: { text: string }) => {
+  if (!text) return <p className="text-muted-foreground">このゲームに関する詳細情報はありません。</p>;
+  
   const html = text
     .split('\n')
     .map(line => {
@@ -30,12 +33,20 @@ const SimpleMarkdown = ({ text }: { text: string }) => {
 };
 
 
-export default function GamePlayer({ game, onClose }: GamePlayerProps) {
+export default function GamePlayer({ game }: GamePlayerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const iframeContainerRef = useRef<HTMLDivElement>(null);
+  const [backendUrl, setBackendUrl] = useState('');
+
+  useEffect(() => {
+    const url = localStorage.getItem('backendUrl');
+    if (url) {
+        setBackendUrl(url);
+    }
+  }, []);
   
-  // The rewrite in next.config.ts will handle proxying this to the backend
-  const gameUrl = `/games/${game.id}/`;
+  // The backend server will serve the game files directly
+  const gameUrl = backendUrl ? `${backendUrl}/games/${game.id}/` : '';
 
   const toggleFullscreen = () => {
     if (!iframeContainerRef.current) return;
@@ -60,27 +71,31 @@ export default function GamePlayer({ game, onClose }: GamePlayerProps) {
 
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center mb-4">
+      <div className="text-center mb-6">
         <h2 className="text-3xl font-bold text-primary">{game.title}</h2>
-        <Button variant="ghost" onClick={onClose}>
-          <XCircle className="mr-2" />
-          ゲームを閉じる
-        </Button>
+        <p className="text-muted-foreground mt-1">{game.description}</p>
       </div>
       
       <div ref={iframeContainerRef} className="relative w-full aspect-video bg-black rounded-lg shadow-2xl mb-8">
-        <iframe
-          src={gameUrl}
-          title={game.title}
-          className="w-full h-full border-0 rounded-lg"
-          allow="fullscreen"
-        />
+        {gameUrl ? (
+            <iframe
+                src={gameUrl}
+                title={game.title}
+                className="w-full h-full border-0 rounded-lg"
+                allow="fullscreen"
+            />
+        ) : (
+            <div className="flex items-center justify-center w-full h-full text-white">
+                バックエンドURLが設定されていません。管理者パネルで設定してください。
+            </div>
+        )}
         <Button
           onClick={toggleFullscreen}
           variant="secondary"
           size="icon"
           className="absolute top-4 right-4 z-10"
           aria-label={isFullscreen ? '全画面表示を終了' : '全画面表示にする'}
+          disabled={!gameUrl}
         >
           {isFullscreen ? <Minimize /> : <Maximize />}
         </Button>

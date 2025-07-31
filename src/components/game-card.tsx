@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Play } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
+import Link from 'next/link';
 
 interface GameCardProps {
   game: Game;
@@ -61,9 +62,11 @@ export default function GameCard({ game, onPlay }: GameCardProps) {
         <CardDescription className="mt-2 text-sm line-clamp-2 text-muted-foreground">{game.description}</CardDescription>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button onClick={() => onPlay(game)} className="w-full transition-transform hover:scale-105 active:scale-95">
-            <Play className="mr-2 h-4 w-4"/>
-            プレイする
+        <Button asChild className="w-full transition-transform hover:scale-105 active:scale-95">
+            <Link href={`/games/${game.id}`}>
+              <Play className="mr-2 h-4 w-4"/>
+              プレイする
+            </Link>
         </Button>
       </CardFooter>
     </Card>

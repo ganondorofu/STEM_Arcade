@@ -1,19 +1,20 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import type { Game } from '@/lib/types';
 import GameCard from '@/components/game-card';
-import GamePlayer from '@/components/game-player';
 import { Gamepad2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query, Timestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
 
 
 export default function Home() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -46,19 +47,11 @@ export default function Home() {
   }, []);
 
   const handlePlay = (game: Game) => {
-    setSelectedGame(game);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleClosePlayer = () => {
-    setSelectedGame(null);
+    router.push(`/games/${game.id}`);
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {selectedGame ? (
-        <GamePlayer game={selectedGame} onClose={handleClosePlayer} />
-      ) : (
         <>
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
@@ -95,7 +88,6 @@ export default function Home() {
             </div>
           )}
         </>
-      )}
     </div>
   );
 }
