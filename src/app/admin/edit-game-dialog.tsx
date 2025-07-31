@@ -38,7 +38,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: game.title,
+      title: game.title || '',
       description: game.description || '',
       markdownText: game.markdownText || '',
     },
@@ -47,7 +47,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
   useEffect(() => {
     if (game) {
       form.reset({
-        title: game.title,
+        title: game.title || '',
         description: game.description || '',
         markdownText: game.markdownText || ''
       });
