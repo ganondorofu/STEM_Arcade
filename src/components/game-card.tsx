@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import type { Game } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,7 @@ interface GameCardProps {
 }
 
 export default function GameCard({ game, onPlay }: GameCardProps) {
-  const thumbnailPath = `/games/${game.id}/img.png`;
+  const thumbnailPath = `/games/${game.id}/img.png?t=${new Date().getTime()}`;
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1.5 bg-secondary border-secondary-foreground/10">
