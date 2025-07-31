@@ -66,7 +66,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
         markdownText: game.markdownText || '',
       });
     }
-  }, [game, textForm.reset, isOpen]);
+  }, [game, textForm, isOpen]);
 
 
   const handleReupload = async (values: z.infer<typeof fileFormSchema>) => {
@@ -164,7 +164,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <FormField
                 control={fileForm.control}
                 name="zipFile"
-                render={({ field: { onChange, onBlur, name, ref } }) => (
+                render={({ field: { onChange, onBlur, name } }) => (
                   <FormItem>
                     <FormLabel>ゲームZIPファイル</FormLabel>
                     <FormControl>
@@ -184,7 +184,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               <FormField
                 control={fileForm.control}
                 name="thumbnail"
-                render={({ field: { onChange, onBlur, name, ref } }) => (
+                render={({ field: { onChange, onBlur, name } }) => (
                   <FormItem>
                     <FormLabel>サムネイル画像</FormLabel>
                     <FormControl>
