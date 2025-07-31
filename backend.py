@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import os
@@ -83,12 +84,17 @@ def reupload_game():
 
     target_dir = os.path.join(GAMES_DIR, game_id)
     if not os.path.isdir(target_dir):
-        return jsonify({"error": "指定されたゲームIDは存在しません"}), 404
+        # 既存のディレクトリがない場合は新規作成する
+        os.makedirs(target_dir, exist_ok=True)
 
     # zip再展開
     if zip_file and zip_file.filename != '':
         try:
-            # 古いBuildとTemplateDataを削除するなどのクリーンアップ処理を入れるとより堅牢
+            # 再アップロードの前に、一度ディレクトリをクリーンアップする
+            if os.path.isdir(target_dir):
+                shutil.rmtree(target_dir)
+            os.makedirs(target_dir, exist_ok=True)
+            
             zip_path = os.path.join(target_dir, 'upload.zip')
             zip_file.save(zip_path)
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -151,3 +157,4 @@ if __name__ == '__main__':
     from flask_cors import CORS
     CORS(app) 
     app.run(host='0.0.0.0', port=5000)
+
