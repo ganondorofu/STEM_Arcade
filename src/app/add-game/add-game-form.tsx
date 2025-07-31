@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -49,7 +50,9 @@ export default function AddGameForm() {
         defaultValues: {
             title: '',
             description: '',
-            markdownText: ''
+            markdownText: '',
+            zipFile: undefined,
+            thumbnail: undefined,
         },
     });
 
