@@ -22,13 +22,17 @@ interface EditGameDialogProps {
   backendUrl: string;
 }
 
-const formSchema = z.object({
+const textFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です。'),
   description: z.string().optional(),
   markdownText: z.string().optional(),
+});
+
+const fileFormSchema = z.object({
   zipFile: z.instanceof(File).optional(),
   thumbnail: z.instanceof(File).optional(),
 });
+
 
 export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, backendUrl }: EditGameDialogProps) {
   const { toast } = useToast();
@@ -36,8 +40,8 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
   const zipInputRef = useRef<HTMLInputElement>(null);
   const thumbInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const textForm = useForm<z.infer<typeof textFormSchema>>({
+    resolver: zodResolver(textFormSchema),
     defaultValues: {
       title: game?.title || '',
       description: game?.description || '',
@@ -45,23 +49,32 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
     },
   });
 
+  const fileForm = useForm<z.infer<typeof fileFormSchema>>({
+    resolver: zodResolver(fileFormSchema),
+    defaultValues: {
+        zipFile: undefined,
+        thumbnail: undefined,
+    }
+  });
+
+
   useEffect(() => {
     if (game) {
-      form.reset({
+      textForm.reset({
         title: game.title || '',
         description: game.description || '',
         markdownText: game.markdownText || '',
       });
     }
-  }, [game, form.reset]);
+  }, [game, textForm.reset, isOpen]);
 
 
-  const handleReupload = async () => {
+  const handleReupload = async (values: z.infer<typeof fileFormSchema>) => {
     if (!backendUrl) {
       toast({ title: "バックエンドURL未設定", description: "管理者ページでURLを設定してください。", variant: "destructive" });
       return;
     }
-    const { zipFile, thumbnail } = form.getValues();
+    const { zipFile, thumbnail } = values;
     if (!zipFile && !thumbnail) {
       toast({ title: "ファイル未選択", description: "再アップロードするファイルを選択してください。", variant: "destructive" });
       return;
@@ -79,8 +92,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
       toast({ title: "ファイル再アップロード成功！", description: "ファイルが正常に更新されました。" });
       
       // Clear file inputs after successful upload
-      form.setValue('zipFile', undefined);
-      form.setValue('thumbnail', undefined);
+      fileForm.reset({zipFile: undefined, thumbnail: undefined});
       if (zipInputRef.current) zipInputRef.current.value = '';
       if (thumbInputRef.current) thumbInputRef.current.value = '';
         
@@ -91,7 +103,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onTextSubmit = async (values: z.infer<typeof textFormSchema>) => {
     try {
       await updateGame(game.id, values.title, values.description || "", values.markdownText || "");
       const updatedGame: Game = {
@@ -115,7 +127,7 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
     }
   };
 
-  const hasFilesForReupload = !!form.watch('zipFile') || !!form.watch('thumbnail');
+  const hasFilesForReupload = !!fileForm.watch('zipFile') || !!fileForm.watch('thumbnail');
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -126,30 +138,33 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
             ゲーム詳細を更新します。ファイルも置き換える場合は、下のセクションからアップロードしてください。
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
-            {/* Text fields for update */}
-            <FormField control={form.control} name="title" render={({ field }) => ( <FormItem> <FormLabel>ゲームタイトル</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
-            <FormField control={form.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>短い説明</FormLabel> <FormControl><Textarea rows={2} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
-            <FormField control={form.control} name="markdownText" render={({ field }) => ( <FormItem> <FormLabel>ゲーム詳細 (Markdown)</FormLabel> <FormControl><Textarea rows={10} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+
+        {/* Text Update Form */}
+        <Form {...textForm}>
+          <form onSubmit={textForm.handleSubmit(onTextSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
+            <FormField control={textForm.control} name="title" render={({ field }) => ( <FormItem> <FormLabel>ゲームタイトル</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+            <FormField control={textForm.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>短い説明</FormLabel> <FormControl><Textarea rows={2} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+            <FormField control={textForm.control} name="markdownText" render={({ field }) => ( <FormItem> <FormLabel>ゲーム詳細 (Markdown)</FormLabel> <FormControl><Textarea rows={10} {...field} /></FormControl> <FormMessage /> </FormItem> )} />
             
             <DialogFooter className="sticky bottom-0 bg-background py-4">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>キャンセル</Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "保存中..." : "テキスト情報を保存"}
+              <Button type="submit" disabled={textForm.formState.isSubmitting}>
+                {textForm.formState.isSubmitting ? "保存中..." : "テキスト情報を保存"}
               </Button>
             </DialogFooter>
           </form>
+        </Form>
 
-          {/* File re-upload section */}
-          <div className="space-y-4 pt-6 border-t">
+        {/* File Re-upload Form */}
+        <Form {...fileForm}>
+             <form onSubmit={fileForm.handleSubmit(handleReupload)} className="space-y-4 pt-6 border-t">
               <p className="text-sm font-medium">ファイルの再アップロード（任意）</p>
               <FormDescription>現在のゲームビルドやサムネイルを置き換える場合に利用します。</FormDescription>
               
               <FormField
-                control={form.control}
+                control={fileForm.control}
                 name="zipFile"
-                render={({ field: { onChange, onBlur, name } }) => (
+                render={({ field: { onChange, onBlur, name, ref } }) => (
                   <FormItem>
                     <FormLabel>ゲームZIPファイル</FormLabel>
                     <FormControl>
@@ -167,9 +182,9 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
                 )}
               />
               <FormField
-                control={form.control}
+                control={fileForm.control}
                 name="thumbnail"
-                render={({ field: { onChange, onBlur, name } }) => (
+                render={({ field: { onChange, onBlur, name, ref } }) => (
                   <FormItem>
                     <FormLabel>サムネイル画像</FormLabel>
                     <FormControl>
@@ -188,12 +203,11 @@ export default function EditGameDialog({ isOpen, setIsOpen, game, onGameUpdate, 
               />
               
               <DialogFooter>
-                  <Button onClick={handleReupload} disabled={!hasFilesForReupload || isReuploading}>
+                  <Button type="submit" disabled={!hasFilesForReupload || isReuploading}>
                       {isReuploading ? "アップロード中..." : "選択したファイルを再アップロード"}
                   </Button>
               </DialogFooter>
-          </div>
-
+             </form>
         </Form>
       </DialogContent>
     </Dialog>
