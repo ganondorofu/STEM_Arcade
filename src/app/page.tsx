@@ -23,6 +23,7 @@ async function getGames(): Promise<Game[]> {
             description: data.description,
             markdownText: data.markdownText,
             createdAt: createdAt ? { seconds: createdAt.seconds, nanoseconds: createdAt.nanoseconds } : null,
+            viewCount: data.viewCount || 0,
         } as Game;
     });
     return gamesList;

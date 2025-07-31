@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, increment } from 'firebase/firestore';
 import type { Config } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
@@ -69,4 +69,21 @@ export async function updateGame(gameId: string, title: string, description: str
     await updateDoc(gameRef, { title, description, markdownText });
     revalidatePath('/admin');
     revalidatePath('/manage');
+}
+
+
+/**
+ * Increments the view count of a game.
+ * @param {string} gameId - The ID of the game to update.
+ */
+export async function incrementViewCount(gameId: string) {
+    try {
+        const gameRef = doc(db, "games", gameId);
+        await updateDoc(gameRef, {
+            viewCount: increment(1)
+        });
+    } catch (error) {
+        // Log the error but don't block the page load
+        console.error(`Failed to increment view count for game ${gameId}:`, error);
+    }
 }

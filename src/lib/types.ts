@@ -8,6 +8,7 @@ export interface Game {
     seconds: number;
     nanoseconds: number;
   };
+  viewCount?: number;
 }
 
 export interface Feedback {

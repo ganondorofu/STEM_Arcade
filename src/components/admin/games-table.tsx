@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Trash2, Edit, MessageSquare, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, Edit, MessageSquare, Loader2, Eye } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,6 +75,7 @@ export default function GamesTable({ backendUrl, onGameUpdate }: GamesTableProps
               description: data.description,
               markdownText: data.markdownText,
               createdAt: createdAt ? { seconds: createdAt.seconds, nanoseconds: createdAt.nanoseconds } : null,
+              viewCount: data.viewCount || 0,
           } as Game;
       });
       setGames(gamesList);
@@ -214,6 +215,7 @@ export default function GamesTable({ backendUrl, onGameUpdate }: GamesTableProps
                         <TableHead>タイトル</TableHead>
                         <TableHead className="hidden md:table-cell">説明</TableHead>
                         <TableHead className="hidden lg:table-cell">追加日</TableHead>
+                        <TableHead className="text-center">閲覧数</TableHead>
                         <TableHead className="text-right">操作</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -224,6 +226,7 @@ export default function GamesTable({ backendUrl, onGameUpdate }: GamesTableProps
                                 <TableCell className="font-medium">{game.title}</TableCell>
                                 <TableCell className="hidden md:table-cell max-w-sm truncate">{game.description}</TableCell>
                                 <TableCell className="hidden lg:table-cell">{formatDate(game.createdAt)}</TableCell>
+                                <TableCell className="text-center">{game.viewCount || 0}</TableCell>
                                 <TableCell className="text-right">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -252,7 +255,7 @@ export default function GamesTable({ backendUrl, onGameUpdate }: GamesTableProps
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={4} className="h-24 text-center">
+                                <TableCell colSpan={5} className="h-24 text-center">
                                     まだゲームが登録されていません。
                                 </TableCell>
                             </TableRow>

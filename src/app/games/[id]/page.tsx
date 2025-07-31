@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { getBackendUrl } from "@/app/admin/actions";
+import { getBackendUrl, incrementViewCount } from "@/app/admin/actions";
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
@@ -29,6 +29,7 @@ async function getGame(id: string): Promise<Game | null> {
             description: data.description,
             markdownText: data.markdownText,
             createdAt: createdAt ? { seconds: createdAt.seconds, nanoseconds: createdAt.nanoseconds } : null,
+            viewCount: data.viewCount || 0,
         } as Game;
 
     } catch (error) {
@@ -39,6 +40,9 @@ async function getGame(id: string): Promise<Game | null> {
 
 
 export default async function GamePage({ params }: { params: { id: string } }) {
+    // Increment view count first, then fetch data
+    await incrementViewCount(params.id);
+
     const [game, backendUrl] = await Promise.all([
         getGame(params.id),
         getBackendUrl(),

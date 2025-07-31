@@ -30,7 +30,7 @@ export default function ViewFeedbackDialog({ isOpen, setIsOpen, game, feedbacks 
         <DialogHeader>
           <DialogTitle>「{game.title}」へのフィードバック</DialogTitle>
           <DialogDescription>
-            プレイヤーからの感想です。合計コメント数: {feedbacks.length}
+            閲覧数: {game.viewCount || 0} | コメント数: {feedbacks.length}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-72 w-full rounded-md border">
