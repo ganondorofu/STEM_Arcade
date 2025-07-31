@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/firebase";
 import { Game } from "@/lib/types";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { revalidatePath } from "next/cache";
 
 export async function addGame(formData: FormData) {
@@ -23,7 +23,7 @@ export async function addGame(formData: FormData) {
   const gameId = `game_${Math.random().toString(36).substring(2, 11)}`;
   formData.append('id', gameId);
 
-  // The Python server will handle both file upload and Firestore document creation.
+  // 1. Upload files to Python server
   const response = await fetch(`${backendUrl}/upload`, {
     method: 'POST',
     body: formData,
@@ -34,8 +34,18 @@ export async function addGame(formData: FormData) {
     console.error("Upload failed:", errorBody);
     throw new Error(`Upload failed: ${response.statusText}. ${errorBody}`);
   }
+
+  // 2. Add game data to Firestore
+  const newGame: Omit<Game, 'id'> = {
+    title,
+    description,
+    markdownText,
+    createdAt: serverTimestamp(),
+  };
+
+  await setDoc(doc(db, "games", gameId), newGame);
   
-  // Revalidate paths to show the new game immediately
+  // 3. Revalidate paths to show the new game immediately
   revalidatePath('/');
   revalidatePath('/admin');
 }
