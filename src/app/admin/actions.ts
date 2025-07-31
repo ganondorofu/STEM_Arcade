@@ -62,6 +62,9 @@ export async function reuploadFiles(formData: FormData) {
     if (!gameId || !backendUrl) {
         throw new Error("ゲームIDまたはバックエンドURLがありません。");
     }
+    
+    // The backendUrl is used to make the fetch call, but should not be in the form data sent to the backend.
+    formData.delete('backendUrl');
 
     const response = await fetch(`${backendUrl}/reupload`, {
         method: 'POST',
