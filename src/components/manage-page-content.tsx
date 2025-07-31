@@ -6,7 +6,11 @@ import AddGameForm from "@/components/add-game-form";
 import GamesTable from "@/components/admin/games-table";
 import BackendUrlConfig from "@/components/admin/backend-url-config";
 
-export default function ManagePageContent() {
+interface ManagePageContentProps {
+  showBackendConfig?: boolean;
+}
+
+export default function ManagePageContent({ showBackendConfig = false }: ManagePageContentProps) {
   const [key, setKey] = useState(0);
   const [backendUrl, setBackendUrl] = useState('');
 
@@ -28,7 +32,7 @@ export default function ManagePageContent() {
         </p>
       </div>
 
-      <BackendUrlConfig onUrlChange={handleUrlChange} />
+      {showBackendConfig && <BackendUrlConfig onUrlChange={handleUrlChange} />}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1">
