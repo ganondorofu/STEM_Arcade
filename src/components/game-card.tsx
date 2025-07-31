@@ -11,6 +11,7 @@ interface GameCardProps {
 }
 
 export default function GameCard({ game, onPlay }: GameCardProps) {
+  // Add a timestamp to the image URL to bust the cache when the image is updated.
   const thumbnailPath = `/games/${game.id}/img.png?t=${new Date().getTime()}`;
 
   return (
@@ -24,11 +25,10 @@ export default function GameCard({ game, onPlay }: GameCardProps) {
             className="object-cover"
             data-ai-hint="gameplay screenshot"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            unoptimized // Add this to handle fallback for non-standard images
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/0f172a/94a3b8';
-              (e.target as HTMLImageElement).srcset = 'https://placehold.co/600x400/0f172a/94a3b8';
-            }}
+            unoptimized // Use unoptimized to prevent issues with Next.js image optimization and serve the file directly.
+            // onError is removed as it was causing issues with Next.js Image component,
+            // sometimes firing incorrectly and replacing the image with a placeholder.
+            // If an image is missing, it will now result in a 404, which is easier to debug.
           />
         </div>
       </CardHeader>

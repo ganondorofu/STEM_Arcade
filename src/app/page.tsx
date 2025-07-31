@@ -6,7 +6,7 @@ import GameCard from '@/components/game-card';
 import GamePlayer from '@/components/game-player';
 import { Gamepad2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, Timestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
 
@@ -21,7 +21,18 @@ export default function Home() {
         const gamesCollection = collection(db, 'games');
         const q = query(gamesCollection, orderBy('createdAt', 'desc'));
         const gameSnapshot = await getDocs(q);
-        const gamesList = gameSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Game));
+        const gamesList = gameSnapshot.docs.map(doc => {
+            const data = doc.data();
+            // Convert Firestore Timestamp to a plain object for serialization
+            const createdAt = data.createdAt as Timestamp | undefined;
+            return {
+                id: doc.id,
+                title: data.title,
+                description: data.description,
+                markdownText: data.markdownText,
+                createdAt: createdAt ? { seconds: createdAt.seconds, nanoseconds: createdAt.nanoseconds } : null,
+            } as Game;
+        });
         setGames(gamesList);
       } catch (error) {
         console.error("ゲームの読み込みに失敗しました:", error);
