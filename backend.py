@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import os
@@ -7,11 +6,9 @@ import shutil
 
 app = Flask(__name__)
 
-# プロジェクトルートを基準とした絶対パスでアップロード先を指定
-# スクリプトの場所から一つ上のディレクトリをプロジェクトルートと想定
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# Next.jsのpublicディレクトリ内にゲームファイルを保存する
-GAMES_DIR = os.path.join(PROJECT_ROOT, 'public', 'games')
+# ゲームファイルの保存先を絶対パスで指定
+GAMES_DIR = r'C:\Users\56\Downloads\public\games'
+PUBLIC_DIR = r'C:\Users\56\Downloads\public'
 
 
 # フォルダ作成
@@ -21,7 +18,7 @@ os.makedirs(GAMES_DIR, exist_ok=True)
 def serve_game_files(path):
     """/games/ ディレクトリ以下の静的ファイルを配信するためのエンドポイント"""
     # 配信元を public/games に変更
-    return send_from_directory(os.path.join(PROJECT_ROOT, 'public'), f'games/{path}')
+    return send_from_directory(PUBLIC_DIR, f'games/{path}')
 
 @app.route('/upload', methods=['POST'])
 def upload_game():
@@ -149,7 +146,8 @@ def submit_feedback():
     if not game_id or not text:
         return jsonify({"error": "id, text は必須です"}), 400
 
-    feedback_dir = os.path.join(PROJECT_ROOT, 'feedback')
+    # フィードバックはスクリプトからの相対パスに保存する
+    feedback_dir = os.path.join(os.path.dirname(__file__), 'feedback')
     os.makedirs(feedback_dir, exist_ok=True)
 
     feedback_path = os.path.join(feedback_dir, f'{secure_filename(game_id)}.txt')
